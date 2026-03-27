@@ -18147,7 +18147,7 @@ EndFunc
 Func _CHECKFORUPDATE ( )
 	; Auto-update from GitHub releases
 	Local Const $SVERSION = "1.5.0"
-	Local Const $SREPO = "anirudhatalmale6-alt/apm-manager"
+	Local Const $SREPO = "bisalog365-commits/apm-manager"
 	Local Const $SAPI = "https://api.github.com/repos/" & $SREPO & "/releases/latest"
 	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
 	If Not IsObj ( $OHTTP ) Then Return
