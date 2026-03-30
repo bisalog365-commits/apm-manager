@@ -18306,7 +18306,7 @@ Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
 	Return $HBITMAP
 EndFunc
 Func _CHECKFORUPDATE ( )
-	Local Const $SVERSION = "2.4"
+	Local Const $SVERSION = "2.5"
 	Local Const $SREPO = "bisalog365-commits/apm-manager"
 	Local Const $SAPI = "https://api.github.com/repos/" & $SREPO & "/releases/latest"
 	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
@@ -18342,22 +18342,55 @@ Func _CHECKFORUPDATE ( )
 	Local $IASK = MsgBox ( 36 , "APM Update Available" , "New version " & $SREMOTE & " is available (you have " & $SVERSION & ")." & @CRLF & @CRLF & "Download and install update?" )
 	If $IASK <> 6 Then Return
 	Local $STMP = @TempDir & "\APM_update.exe"
-	$OHTTP .Open ( "GET" , $SDOWNURL , False )
-	$OHTTP .Send ( )
-	If $OHTTP .Status <> 200 Then
-		MsgBox ( 16 , "Update Failed" , "Could not download update. Try again later." )
+	; Use a fresh WinHTTP object for download (follows redirects properly)
+	Local $ODLHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
+	If Not IsObj ( $ODLHTTP ) Then
+		MsgBox ( 16 , "Update Failed" , "Could not create download object." )
+		Return
+	EndIf
+	$ODLHTTP .Open ( "GET" , $SDOWNURL , False )
+	$ODLHTTP .SetRequestHeader ( "User-Agent" , "APM-Manager" )
+	$ODLHTTP .Send ( )
+	; Follow redirects - check if we got actual binary (not HTML)
+	If $ODLHTTP .Status <> 200 Then
+		MsgBox ( 16 , "Update Failed" , "Download failed with status " & $ODLHTTP .Status & ". Try again later." )
+		Return
+	EndIf
+	Local $IRESPSIZE = LenB ( $ODLHTTP .ResponseBody )
+	If $IRESPSIZE < 100000 Then
+		; Too small to be an EXE - probably got HTML error page
+		MsgBox ( 16 , "Update Failed" , "Downloaded file is too small (" & $IRESPSIZE & " bytes). Try again later." )
 		Return
 	EndIf
 	Local $OSTREAM = ObjCreate ( "ADODB.Stream" )
 	$OSTREAM .Open ( )
 	$OSTREAM .Type = 1
-	$OSTREAM .Write ( $OHTTP .ResponseBody )
+	$OSTREAM .Write ( $ODLHTTP .ResponseBody )
 	$OSTREAM .SaveToFile ( $STMP , 2 )
 	$OSTREAM .Close ( )
+	; Verify file was saved
+	If Not FileExists ( $STMP ) Or FileGetSize ( $STMP ) < 100000 Then
+		MsgBox ( 16 , "Update Failed" , "Could not save update file." )
+		Return
+	EndIf
 	Local $SBAT = @TempDir & "\apm_update.bat"
 	Local $SEXE = @ScriptFullPath
 	FileDelete ( $SBAT )
-	FileWrite ( $SBAT , "@echo off" & @CRLF & "timeout /t 2 /nobreak >nul" & @CRLF & "copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & "start """" """ & $SEXE & """" & @CRLF & "del """ & $STMP & """" & @CRLF & "del ""%~f0""" & @CRLF )
+	; Wait longer (4 sec), retry copy 3 times in case EXE is still locked
+	FileWrite ( $SBAT , "@echo off" & @CRLF & _
+		"timeout /t 4 /nobreak >nul" & @CRLF & _
+		"copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & _
+		"if errorlevel 1 (" & @CRLF & _
+		"  timeout /t 2 /nobreak >nul" & @CRLF & _
+		"  copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & _
+		")" & @CRLF & _
+		"if errorlevel 1 (" & @CRLF & _
+		"  timeout /t 3 /nobreak >nul" & @CRLF & _
+		"  copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & _
+		")" & @CRLF & _
+		"start """" """ & $SEXE & """" & @CRLF & _
+		"del """ & $STMP & """" & @CRLF & _
+		"del ""%~f0""" & @CRLF )
 	Run ( $SBAT , "" , @SW_HIDE )
 	Exit
 EndFunc
