@@ -18310,7 +18310,7 @@ Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
 	Return $HBITMAP
 EndFunc
 Func _CHECKFORUPDATE ( )
-	Local Const $SVERSION = "1.5.1"
+	Local Const $SVERSION = "2.2"
 	Local Const $SREPO = "bisalog365-commits/apm-manager"
 	Local Const $SAPI = "https://api.github.com/repos/" & $SREPO & "/releases/latest"
 	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
