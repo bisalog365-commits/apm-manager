@@ -616,20 +616,20 @@ Func _CHOOSECOLOR ( $VRETURNTYPE = 0 , $ICOLORREF = 0 , $IREFTYPE = 0 , $HWNDOWN
 	Local $TCHOOSE = DllStructCreate ( $TAGCHOOSECOLOR )
 	Local Static $TCC = DllStructCreate ( $TAGCUSTCOLORS )
 	Local $IRETURNTYPE , $VRETURN
-	If $VRETURNTYPE = + 4294967287 Or $VRETURNTYPE = + 4294967286 Then
+	If $VRETURNTYPE = - 9 Or $VRETURNTYPE = - 10 Then
 		Local $A_TCC = __CHOOSECOLOR_STRUCTTOARRAY ( $TCC )
 		$A_TCC [ 0 ] = - 1
-		If $VRETURNTYPE = + 4294967286 Then $TCC = DllStructCreate ( $TAGCUSTCOLORS )
+		If $VRETURNTYPE = - 10 Then $TCC = DllStructCreate ( $TAGCUSTCOLORS )
 		Return $A_TCC
 	ElseIf $VRETURNTYPE > 9 Then
 		$TCC = DllStructCreate ( $TAGCUSTCOLORS )
-		$IRETURNTYPE = $VRETURNTYPE + 4294967286
+		$IRETURNTYPE = $VRETURNTYPE - 10
 	ElseIf IsArray ( $VRETURNTYPE ) Then
 		If UBound ( $VRETURNTYPE , $UBOUND_ROWS ) = 17 And UBound ( $VRETURNTYPE , $UBOUND_DIMENSIONS ) = 1 Then
 			For $N = 1 To 16
 				DllStructSetData ( $TCC , 1 , $VRETURNTYPE [ $N ] , $N )
 			Next
-			If $VRETURNTYPE [ 0 ] = + 4294967287 Then
+			If $VRETURNTYPE [ 0 ] = - 9 Then
 				$VRETURNTYPE [ 0 ] = 0
 				Return $VRETURNTYPE
 			EndIf
@@ -701,7 +701,7 @@ Func __CHOOSECOLOR_STRUCTTOARRAY ( ByRef $TSTRUCT )
 EndFunc
 Func _CHOOSEFONT ( $SFONTNAME = "Courier New" , $IPOINTSIZE = 10 , $IFONTCOLORREF = 0 , $IFONTWEIGHT = 0 , $BITALIC = False , $BUNDERLINE = False , $BSTRIKETHRU = False , $HWNDOWNER = 0 )
 	Local $IITALIC = 0 , $IUNDERLINE = 0 , $ISTRIKEOUT = 0
-	$IFONTCOLORREF = BitOR ( BitShift ( BitAND ( $IFONTCOLORREF , 255 ) , + 4294967280 ) , BitAND ( $IFONTCOLORREF , 65280 ) , BitShift ( BitAND ( $IFONTCOLORREF , 16711680 ) , 16 ) )
+	$IFONTCOLORREF = BitOR ( BitShift ( BitAND ( $IFONTCOLORREF , 255 ) , - 16 ) , BitAND ( $IFONTCOLORREF , 65280 ) , BitShift ( BitAND ( $IFONTCOLORREF , 16711680 ) , 16 ) )
 	Local $HDC = __MISC_GETDC ( 0 )
 	Local $IHEIGHT = Round ( ( $IPOINTSIZE * __MISC_GETDEVICECAPS ( $HDC , $LOGPIXELSX ) ) / 72 , 0 )
 	__MISC_RELEASEDC ( 0 , $HDC )
@@ -996,7 +996,7 @@ Global Const $MCM_SETSELRANGE = ( $MCM_FIRST + 6 )
 Global Const $MCM_SETTODAY = ( $MCM_FIRST + 12 )
 Global Const $MCM_SETUNICODEFORMAT = 8192 + 5
 Global Const $MCM_SIZERECTTOMIN = ( $MCM_FIRST + 29 )
-Global Const $MCN_FIRST = + 4294966550
+Global Const $MCN_FIRST = - 746
 Global Const $MCN_SELCHANGE = ( $MCN_FIRST - 3 )
 Global Const $MCN_GETDAYSTATE = ( $MCN_FIRST - 1 )
 Global Const $MCN_SELECT = ( $MCN_FIRST )
@@ -1019,8 +1019,8 @@ Global Const $DTM_GETMONTHCAL = $DTM_FIRST + 8
 Global Const $DTM_SETMCFONT = $DTM_FIRST + 9
 Global Const $DTM_GETMCFONT = $DTM_FIRST + 10
 Global Const $DTM_SETFORMATW = $DTM_FIRST + 50
-Global Const $DTN_FIRST = + 4294966556
-Global Const $DTN_FIRST2 = + 4294966543
+Global Const $DTN_FIRST = - 740
+Global Const $DTN_FIRST2 = - 753
 Global Const $DTN_DATETIMECHANGE = $DTN_FIRST2 - 6
 Global Const $DTN_USERSTRING = $DTN_FIRST2 - 5
 Global Const $DTN_WMKEYDOWN = $DTN_FIRST2 - 4
@@ -1757,7 +1757,7 @@ Func _WINAPI_STRLEN ( $PSTRING , $BUNICODE = True )
 EndFunc
 Func _WINAPI_SWITCHCOLOR ( $ICOLOR )
 	If $ICOLOR = - 1 Then Return $ICOLOR
-	Return BitOR ( BitAND ( $ICOLOR , 65280 ) , BitShift ( BitAND ( $ICOLOR , 255 ) , + 4294967280 ) , BitShift ( BitAND ( $ICOLOR , 16711680 ) , 16 ) )
+	Return BitOR ( BitAND ( $ICOLOR , 65280 ) , BitShift ( BitAND ( $ICOLOR , 255 ) , - 16 ) , BitShift ( BitAND ( $ICOLOR , 16711680 ) , 16 ) )
 EndFunc
 Func _WINAPI_WRITEFILE ( $HFILE , $PBUFFER , $ITOWRITE , ByRef $IWRITTEN , $TOVERLAPPED = 0 )
 	Local $ACALL = DllCall ( "kernel32.dll" , "bool" , "WriteFile" , "handle" , $HFILE , "struct*" , $PBUFFER , "dword" , $ITOWRITE , "dword*" , 0 , "struct*" , $TOVERLAPPED )
@@ -1943,7 +1943,7 @@ Func _WINAPI_GETOBJECTTYPE ( $HOBJECT )
 EndFunc
 Func _WINAPI_GETSTDHANDLE ( $ISTDHANDLE )
 	If $ISTDHANDLE < 0 Or $ISTDHANDLE > 2 Then Return SetError ( 2 , 0 , - 1 )
-	Local Const $AHANDLE [ 3 ] = [ + 4294967286 , + 4294967285 , + 4294967284 ]
+	Local Const $AHANDLE [ 3 ] = [ - 10 , - 11 , - 12 ]
 	Local $ACALL = DllCall ( "kernel32.dll" , "handle" , "GetStdHandle" , "dword" , $AHANDLE [ $ISTDHANDLE ] )
 	If @error Then Return SetError ( @error , @extended , - 1 )
 	Return $ACALL [ 0 ]
@@ -2347,7 +2347,7 @@ Func _DATEADD ( $STYPE , $INUMBER , $SDATE )
 	If $STYPE = "m" Then
 		$ASDATEPART [ 2 ] = $ASDATEPART [ 2 ] + $INUMBER
 		While $ASDATEPART [ 2 ] > 12
-			$ASDATEPART [ 2 ] = $ASDATEPART [ 2 ] + 4294967284
+			$ASDATEPART [ 2 ] = $ASDATEPART [ 2 ] - 12
 			$ASDATEPART [ 1 ] = $ASDATEPART [ 1 ] + 1
 		WEnd
 		While $ASDATEPART [ 2 ] < 1
@@ -2711,7 +2711,7 @@ Func _DATETIMEFORMAT ( $SDATE , $STYPE )
 				If $ASTIMEPART [ 1 ] = 0 Then $ASTIMEPART [ 1 ] = 12
 			Else
 				$STEMPTIME = StringReplace ( $STEMPTIME , "tt" , $SPM )
-				If $ASTIMEPART [ 1 ] > 12 Then $ASTIMEPART [ 1 ] = $ASTIMEPART [ 1 ] + 4294967284
+				If $ASTIMEPART [ 1 ] > 12 Then $ASTIMEPART [ 1 ] = $ASTIMEPART [ 1 ] - 12
 			EndIf
 		EndIf
 		$ASTIMEPART [ 1 ] = StringRight ( "0" & $ASTIMEPART [ 1 ] , 2 )
@@ -2808,12 +2808,12 @@ Func _DAYVALUETODATE ( $IJULIANDATE , ByRef $IYEAR , ByRef $IMONTH , ByRef $IDAY
 	If $I_FACTORE - 1 < 13 Then
 		$IMONTH = $I_FACTORE - 1
 	Else
-		$IMONTH = $I_FACTORE + 4294967283
+		$IMONTH = $I_FACTORE - 13
 	EndIf
 	If $IMONTH < 3 Then
-		$IYEAR = $I_FACTORC + 4294962581
+		$IYEAR = $I_FACTORC - 4715
 	Else
-		$IYEAR = $I_FACTORC + 4294962580
+		$IYEAR = $I_FACTORC - 4716
 	EndIf
 	$IYEAR = StringFormat ( "%04d" , $IYEAR )
 	$IMONTH = StringFormat ( "%02d" , $IMONTH )
@@ -3750,19 +3750,19 @@ Global Const $NM_DBLCLK = $NM_FIRST - 3
 Global Const $NM_RETURN = $NM_FIRST - 4
 Global Const $NM_RCLICK = $NM_FIRST - 5
 Global Const $NM_RDBLCLK = $NM_FIRST - 6
-Global Const $NM_SETFOCUS = $NM_FIRST + 4294967289
-Global Const $NM_KILLFOCUS = $NM_FIRST + 4294967288
-Global Const $NM_CUSTOMDRAW = $NM_FIRST + 4294967284
-Global Const $NM_HOVER = $NM_FIRST + 4294967283
-Global Const $NM_NCHITTEST = $NM_FIRST + 4294967282
-Global Const $NM_KEYDOWN = $NM_FIRST + 4294967281
-Global Const $NM_RELEASEDCAPTURE = $NM_FIRST + 4294967280
-Global Const $NM_SETCURSOR = $NM_FIRST + 4294967279
-Global Const $NM_CHAR = $NM_FIRST + 4294967278
-Global Const $NM_TOOLTIPSCREATED = $NM_FIRST + 4294967277
-Global Const $NM_LDOWN = $NM_FIRST + 4294967276
-Global Const $NM_RDOWN = $NM_FIRST + 4294967275
-Global Const $NM_THEMECHANGED = $NM_FIRST + 4294967274
+Global Const $NM_SETFOCUS = $NM_FIRST - 7
+Global Const $NM_KILLFOCUS = $NM_FIRST - 8
+Global Const $NM_CUSTOMDRAW = $NM_FIRST - 12
+Global Const $NM_HOVER = $NM_FIRST - 13
+Global Const $NM_NCHITTEST = $NM_FIRST - 14
+Global Const $NM_KEYDOWN = $NM_FIRST - 15
+Global Const $NM_RELEASEDCAPTURE = $NM_FIRST - 16
+Global Const $NM_SETCURSOR = $NM_FIRST - 17
+Global Const $NM_CHAR = $NM_FIRST - 18
+Global Const $NM_TOOLTIPSCREATED = $NM_FIRST - 19
+Global Const $NM_LDOWN = $NM_FIRST - 20
+Global Const $NM_RDOWN = $NM_FIRST - 21
+Global Const $NM_THEMECHANGED = $NM_FIRST - 22
 Global Const $WM_MOUSEFIRST = 512
 Global Const $WM_MOUSEMOVE = 512
 Global Const $WM_LBUTTONDOWN = 513
@@ -4103,13 +4103,13 @@ Global Const $GUI_EVENT_CLOSE = - 3
 Global Const $GUI_EVENT_MINIMIZE = - 4
 Global Const $GUI_EVENT_RESTORE = - 5
 Global Const $GUI_EVENT_MAXIMIZE = - 6
-Global Const $GUI_EVENT_PRIMARYDOWN = + 4294967289
-Global Const $GUI_EVENT_PRIMARYUP = + 4294967288
-Global Const $GUI_EVENT_SECONDARYDOWN = + 4294967287
-Global Const $GUI_EVENT_SECONDARYUP = + 4294967286
-Global Const $GUI_EVENT_MOUSEMOVE = + 4294967285
-Global Const $GUI_EVENT_RESIZED = + 4294967284
-Global Const $GUI_EVENT_DROPPED = + 4294967283
+Global Const $GUI_EVENT_PRIMARYDOWN = - 7
+Global Const $GUI_EVENT_PRIMARYUP = - 8
+Global Const $GUI_EVENT_SECONDARYDOWN = - 9
+Global Const $GUI_EVENT_SECONDARYUP = - 10
+Global Const $GUI_EVENT_MOUSEMOVE = - 11
+Global Const $GUI_EVENT_RESIZED = - 12
+Global Const $GUI_EVENT_DROPPED = - 13
 Global Const $GUI_RUNDEFMSG = "GUI_RUNDEFMSG"
 Global Const $GUI_AVISTOP = 0
 Global Const $GUI_AVISTART = 1
@@ -4235,7 +4235,7 @@ Global Const $BM_SETDONTCLICK = 248
 Global Const $BM_SETIMAGE = 247
 Global Const $BM_SETSTATE = 243
 Global Const $BM_SETSTYLE = 244
-Global Const $BCN_FIRST = + 4294966046
+Global Const $BCN_FIRST = - 1250
 Global Const $BCN_DROPDOWN = ( $BCN_FIRST + 2 )
 Global Const $BCN_HOTITEMCHANGE = ( $BCN_FIRST + 1 )
 Global Const $BN_CLICKED = 0
@@ -4503,8 +4503,8 @@ Func __ARRAYDISPLAY_SHARE ( Const ByRef $AARRAY , $STITLE = Default , $SARRAYRAN
 	Local $AIWIN_POS = WinGetPos ( $HGUI )
 	Local $AILV_POS = ControlGetPos ( $HGUI , "" , $IDLISTVIEW )
 	$IHEIGHT = ( ( $_G_ARRAYDISPLAY_NROWS + 3 ) * ( DllStructGetData ( $TRECT , "Bottom" ) - DllStructGetData ( $TRECT , "Top" ) ) ) + $AIWIN_POS [ 3 ] - $AILV_POS [ 3 ]
-	If $IHEIGHT > @DesktopHeight + 4294967196 Then
-		$IHEIGHT = @DesktopHeight + 4294967196
+	If $IHEIGHT > @DesktopHeight - 100 Then
+		$IHEIGHT = @DesktopHeight - 100
 	ElseIf $IHEIGHT < $IMINSIZE Then
 		$IHEIGHT = $IMINSIZE
 	EndIf
@@ -4547,7 +4547,7 @@ Func __ARRAYDISPLAY_SHARE ( Const ByRef $AARRAY , $STITLE = Default , $SARRAYRAN
 		$IWIDTH += $ICOLWIDTH
 		$AICOLWIDTH [ $I ] = $ICOLWIDTH
 	Next
-	If $IWIDTH > @DesktopWidth + 4294967196 Then
+	If $IWIDTH > @DesktopWidth - 100 Then
 		$IWIDTH = 40
 		For $I = 0 To $ICOLFILL - 1
 			If $AICOLWIDTH [ $I ] > $IMAX_COLWIDTH Then
@@ -4559,14 +4559,14 @@ Func __ARRAYDISPLAY_SHARE ( Const ByRef $AARRAY , $STITLE = Default , $SARRAYRAN
 			If $I < 20 And $BDEBUG Then ConsoleWrite ( "@@ Debug(" & @ScriptLineNumber & ") : $iWidth = " & $IWIDTH & " $i = " & $I & @CRLF )
 		Next
 	EndIf
-	If $IWIDTH > @DesktopWidth + 4294967196 Then
-		$IWIDTH = @DesktopWidth + 4294967196
+	If $IWIDTH > @DesktopWidth - 100 Then
+		$IWIDTH = @DesktopWidth - 100
 	ElseIf $IWIDTH < $IMINSIZE Then
 		$IWIDTH = $IMINSIZE
 	EndIf
 	#EndRegion Adjust dialog width
 	Local $ISCROLLBARSIZE = 0
-	If $IHEIGHT = ( @DesktopHeight + 4294967196 ) Then $ISCROLLBARSIZE = 15
+	If $IHEIGHT = ( @DesktopHeight - 100 ) Then $ISCROLLBARSIZE = 15
 	WinMove ( $HGUI , "" , ( @DesktopWidth - $IWIDTH + $ISCROLLBARSIZE ) / 2 , ( @DesktopHeight - $IHEIGHT ) / 2 , $IWIDTH + $ISCROLLBARSIZE , $IHEIGHT )
 	$AIGUISIZE = WinGetClientSize ( $HGUI )
 	GUICtrlSetPos ( $IDLISTVIEW , 0 , 0 , $IWIDTH , $AIGUISIZE [ 1 ] - $IBUTTONBORDER )
@@ -4580,14 +4580,14 @@ Func __ARRAYDISPLAY_SHARE ( Const ByRef $AARRAY , $STITLE = Default , $SARRAYRAN
 		Local $IBUTTONWIDTH_VAR = $IBUTTONWIDTH_1
 		Local $IOFFSET = $IBUTTONWIDTH_1
 		If IsFunc ( $HUSER_FUNCTION ) Then
-			$IDUSER_FUNC = GUICtrlCreateButton ( "Run User Func" , $IBUTTONWIDTH_2 , $AIGUISIZE [ 1 ] + 4294967276 , $IBUTTONWIDTH_2 , 20 )
+			$IDUSER_FUNC = GUICtrlCreateButton ( "Run User Func" , $IBUTTONWIDTH_2 , $AIGUISIZE [ 1 ] - 20 , $IBUTTONWIDTH_2 , 20 )
 			$IBUTTONWIDTH_VAR = $IBUTTONWIDTH_2
 			$IOFFSET = $IBUTTONWIDTH_2 * 2
 		EndIf
-		$IDEXIT_SCRIPT = GUICtrlCreateButton ( "Exit Script" , $IOFFSET , $AIGUISIZE [ 1 ] + 4294967276 , $IBUTTONWIDTH_VAR , 20 )
-		$IDDATA_LABEL = GUICtrlCreateLabel ( $SDISPLAYDATA , 0 , $AIGUISIZE [ 1 ] + 4294967276 , $IBUTTONWIDTH_VAR , 18 , BitOR ( $_ARRAYCONSTANT_SS_CENTER , $_ARRAYCONSTANT_SS_CENTERIMAGE ) )
+		$IDEXIT_SCRIPT = GUICtrlCreateButton ( "Exit Script" , $IOFFSET , $AIGUISIZE [ 1 ] - 20 , $IBUTTONWIDTH_VAR , 20 )
+		$IDDATA_LABEL = GUICtrlCreateLabel ( $SDISPLAYDATA , 0 , $AIGUISIZE [ 1 ] - 20 , $IBUTTONWIDTH_VAR , 18 , BitOR ( $_ARRAYCONSTANT_SS_CENTER , $_ARRAYCONSTANT_SS_CENTERIMAGE ) )
 	Else
-		$IDDATA_LABEL = GUICtrlCreateLabel ( $SDISPLAYDATA , 0 , $AIGUISIZE [ 1 ] + 4294967276 , $AIGUISIZE [ 0 ] , 18 , BitOR ( $_ARRAYCONSTANT_SS_CENTER , $_ARRAYCONSTANT_SS_CENTERIMAGE ) )
+		$IDDATA_LABEL = GUICtrlCreateLabel ( $SDISPLAYDATA , 0 , $AIGUISIZE [ 1 ] - 20 , $AIGUISIZE [ 0 ] , 18 , BitOR ( $_ARRAYCONSTANT_SS_CENTER , $_ARRAYCONSTANT_SS_CENTERIMAGE ) )
 	EndIf
 	If $_G_ARRAYDISPLAY_ITRANSPOSE Or $SARRAYRANGE Then
 		GUICtrlSetColor ( $IDDATA_LABEL , 16711680 )
@@ -4718,7 +4718,7 @@ Func __ARRAYDISPLAY_NOTIFYHANDLER ( $HWND , $IMSG , $WPARAM , $LPARAM , $ISUBCLA
 	Switch HWnd ( DllStructGetData ( $TNMLVDISPINFO , "hWndFrom" ) )
 	Case $_G_ARRAYDISPLAY_HLISTVIEW
 		Switch DllStructGetData ( $TNMLVDISPINFO , "Code" )
-		Case + 4294967119
+		Case - 177
 			Local Static $TTEXT = DllStructCreate ( "wchar[4096]" ) , $PTEXT = DllStructGetPtr ( $TTEXT )
 			Local $IITEM = DllStructGetData ( $TNMLVDISPINFO , "Item" )
 			Local $IROW = ( $_G_ARRAYDISPLAY_ISORTDIR = 1024 ) ? $_G_ARRAYDISPLAY_AINDEX [ $IITEM ] : $_G_ARRAYDISPLAY_AINDEX [ $_G_ARRAYDISPLAY_NROWS - 1 - $IITEM ]
@@ -7059,29 +7059,29 @@ Global Const $HDM_SETITEMA = $HDM_FIRST + 4
 Global Const $HDM_SETITEMW = $HDM_FIRST + 12
 Global Const $HDM_SETORDERARRAY = $HDM_FIRST + 18
 Global Const $HDM_SETUNICODEFORMAT = 8192 + 5
-Global Const $HDN_FIRST = + 4294966996
-Global Const $HDN_BEGINDRAG = $HDN_FIRST + 4294967286
+Global Const $HDN_FIRST = - 300
+Global Const $HDN_BEGINDRAG = $HDN_FIRST - 10
 Global Const $HDN_BEGINTRACK = $HDN_FIRST - 6
 Global Const $HDN_DIVIDERDBLCLICK = $HDN_FIRST - 5
-Global Const $HDN_ENDDRAG = $HDN_FIRST + 4294967285
-Global Const $HDN_ENDTRACK = $HDN_FIRST + 4294967289
-Global Const $HDN_FILTERBTNCLICK = $HDN_FIRST + 4294967283
-Global Const $HDN_FILTERCHANGE = $HDN_FIRST + 4294967284
-Global Const $HDN_GETDISPINFO = $HDN_FIRST + 4294967287
+Global Const $HDN_ENDDRAG = $HDN_FIRST - 11
+Global Const $HDN_ENDTRACK = $HDN_FIRST - 7
+Global Const $HDN_FILTERBTNCLICK = $HDN_FIRST - 13
+Global Const $HDN_FILTERCHANGE = $HDN_FIRST - 12
+Global Const $HDN_GETDISPINFO = $HDN_FIRST - 9
 Global Const $HDN_ITEMCHANGED = $HDN_FIRST - 1
 Global Const $HDN_ITEMCHANGING = $HDN_FIRST + 0
 Global Const $HDN_ITEMCLICK = $HDN_FIRST - 2
 Global Const $HDN_ITEMDBLCLICK = $HDN_FIRST - 3
-Global Const $HDN_TRACK = $HDN_FIRST + 4294967288
-Global Const $HDN_BEGINTRACKW = $HDN_FIRST + 4294967270
-Global Const $HDN_DIVIDERDBLCLICKW = $HDN_FIRST + 4294967271
-Global Const $HDN_ENDTRACKW = $HDN_FIRST + 4294967269
-Global Const $HDN_GETDISPINFOW = $HDN_FIRST + 4294967267
-Global Const $HDN_ITEMCHANGEDW = $HDN_FIRST + 4294967275
-Global Const $HDN_ITEMCHANGINGW = $HDN_FIRST + 4294967276
-Global Const $HDN_ITEMCLICKW = $HDN_FIRST + 4294967274
-Global Const $HDN_ITEMDBLCLICKW = $HDN_FIRST + 4294967273
-Global Const $HDN_TRACKW = $HDN_FIRST + 4294967268
+Global Const $HDN_TRACK = $HDN_FIRST - 8
+Global Const $HDN_BEGINTRACKW = $HDN_FIRST - 26
+Global Const $HDN_DIVIDERDBLCLICKW = $HDN_FIRST - 25
+Global Const $HDN_ENDTRACKW = $HDN_FIRST - 27
+Global Const $HDN_GETDISPINFOW = $HDN_FIRST - 29
+Global Const $HDN_ITEMCHANGEDW = $HDN_FIRST - 21
+Global Const $HDN_ITEMCHANGINGW = $HDN_FIRST - 20
+Global Const $HDN_ITEMCLICKW = $HDN_FIRST - 22
+Global Const $HDN_ITEMDBLCLICKW = $HDN_FIRST - 23
+Global Const $HDN_TRACKW = $HDN_FIRST - 28
 Global Const $HDS_BUTTONS = 2
 Global Const $HDS_CHECKBOXES = 1024
 Global Const $HDS_DRAGDROP = 64
@@ -7281,13 +7281,13 @@ Func _WINAPI_LONGMID ( $IVALUE , $ISTART , $ICOUNT )
 	Return BitAND ( BitShift ( $IVALUE , $ISTART ) , BitOR ( BitShift ( BitShift ( 2147483647 , 32 - ( $ICOUNT + 1 ) ) , 1 ) , BitShift ( 1 , - ( $ICOUNT - 1 ) ) ) )
 EndFunc
 Func _WINAPI_MAKELANGID ( $ILNGIDPRIMARY , $ILNGIDSUB )
-	Return BitOR ( BitShift ( $ILNGIDSUB , + 4294967286 ) , $ILNGIDPRIMARY )
+	Return BitOR ( BitShift ( $ILNGIDSUB , - 10 ) , $ILNGIDPRIMARY )
 EndFunc
 Func _WINAPI_MAKELCID ( $ILNGID , $ISORTID )
-	Return BitOR ( BitShift ( $ISORTID , + 4294967280 ) , $ILNGID )
+	Return BitOR ( BitShift ( $ISORTID , - 16 ) , $ILNGID )
 EndFunc
 Func _WINAPI_MAKELONG ( $ILO , $IHI )
-	Return BitOR ( BitShift ( $IHI , + 4294967280 ) , BitAND ( $ILO , 65535 ) )
+	Return BitOR ( BitShift ( $IHI , - 16 ) , BitAND ( $ILO , 65535 ) )
 EndFunc
 Func _WINAPI_MAKEQWORD ( $ILODWORD , $IHIDWORD )
 	Local $TINT64 = DllStructCreate ( "uint64" )
@@ -8156,44 +8156,44 @@ Global Const $LVM_SORTITEMS = ( $LVM_FIRST + 48 )
 Global Const $LVM_SORTITEMSEX = ( $LVM_FIRST + 81 )
 Global Const $LVM_SUBITEMHITTEST = ( $LVM_FIRST + 57 )
 Global Const $LVM_UPDATE = ( $LVM_FIRST + 42 )
-Global Const $LVN_FIRST = + 4294967196
-Global Const $LVN_LAST = + 4294967097
-Global Const $LVN_BEGINDRAG = ( $LVN_FIRST + 4294967287 )
+Global Const $LVN_FIRST = - 100
+Global Const $LVN_LAST = - 199
+Global Const $LVN_BEGINDRAG = ( $LVN_FIRST - 9 )
 Global Const $LVN_BEGINLABELEDITA = ( $LVN_FIRST - 5 )
-Global Const $LVN_BEGINLABELEDITW = ( $LVN_FIRST + 4294967221 )
-Global Const $LVN_BEGINRDRAG = ( $LVN_FIRST + 4294967285 )
-Global Const $LVN_BEGINSCROLL = ( $LVN_FIRST + 4294967216 )
-Global Const $LVN_COLUMNCLICK = ( $LVN_FIRST + 4294967288 )
-Global Const $LVN_COLUMNDROPDOWN = ( $LVN_FIRST + 4294967232 )
-Global Const $LVN_COLUMNOVERFLOWCLICK = ( $LVN_FIRST + 4294967230 )
+Global Const $LVN_BEGINLABELEDITW = ( $LVN_FIRST - 75 )
+Global Const $LVN_BEGINRDRAG = ( $LVN_FIRST - 11 )
+Global Const $LVN_BEGINSCROLL = ( $LVN_FIRST - 80 )
+Global Const $LVN_COLUMNCLICK = ( $LVN_FIRST - 8 )
+Global Const $LVN_COLUMNDROPDOWN = ( $LVN_FIRST - 64 )
+Global Const $LVN_COLUMNOVERFLOWCLICK = ( $LVN_FIRST - 66 )
 Global Const $LVN_DELETEALLITEMS = ( $LVN_FIRST - 4 )
 Global Const $LVN_DELETEITEM = ( $LVN_FIRST - 3 )
 Global Const $LVN_ENDLABELEDITA = ( $LVN_FIRST - 6 )
-Global Const $LVN_ENDLABELEDITW = ( $LVN_FIRST + 4294967220 )
-Global Const $LVN_ENDSCROLL = ( $LVN_FIRST + 4294967215 )
-Global Const $LVN_GETDISPINFOA = ( $LVN_FIRST + 4294967246 )
-Global Const $LVN_GETDISPINFOW = ( $LVN_FIRST + 4294967219 )
+Global Const $LVN_ENDLABELEDITW = ( $LVN_FIRST - 76 )
+Global Const $LVN_ENDSCROLL = ( $LVN_FIRST - 81 )
+Global Const $LVN_GETDISPINFOA = ( $LVN_FIRST - 50 )
+Global Const $LVN_GETDISPINFOW = ( $LVN_FIRST - 77 )
 Global Const $LVN_GETDISPINFO = $LVN_GETDISPINFOA
-Global Const $LVN_GETEMPTYMARKUP = ( $LVN_FIRST + 4294967209 )
-Global Const $LVN_GETINFOTIPA = ( $LVN_FIRST + 4294967239 )
-Global Const $LVN_GETINFOTIPW = ( $LVN_FIRST + 4294967238 )
-Global Const $LVN_HOTTRACK = ( $LVN_FIRST + 4294967275 )
-Global Const $LVN_INCREMENTALSEARCHA = ( $LVN_FIRST + 4294967234 )
-Global Const $LVN_INCREMENTALSEARCHW = ( $LVN_FIRST + 4294967233 )
+Global Const $LVN_GETEMPTYMARKUP = ( $LVN_FIRST - 87 )
+Global Const $LVN_GETINFOTIPA = ( $LVN_FIRST - 57 )
+Global Const $LVN_GETINFOTIPW = ( $LVN_FIRST - 58 )
+Global Const $LVN_HOTTRACK = ( $LVN_FIRST - 21 )
+Global Const $LVN_INCREMENTALSEARCHA = ( $LVN_FIRST - 62 )
+Global Const $LVN_INCREMENTALSEARCHW = ( $LVN_FIRST - 63 )
 Global Const $LVN_INSERTITEM = ( $LVN_FIRST - 2 )
-Global Const $LVN_ITEMACTIVATE = ( $LVN_FIRST + 4294967282 )
+Global Const $LVN_ITEMACTIVATE = ( $LVN_FIRST - 14 )
 Global Const $LVN_ITEMCHANGED = ( $LVN_FIRST - 1 )
 Global Const $LVN_ITEMCHANGING = ( $LVN_FIRST + 0 )
-Global Const $LVN_KEYDOWN = ( $LVN_FIRST + 4294967241 )
-Global Const $LVN_LINKCLICK = ( $LVN_FIRST + 4294967212 )
-Global Const $LVN_MARQUEEBEGIN = ( $LVN_FIRST + 4294967240 )
-Global Const $LVN_ODCACHEHINT = ( $LVN_FIRST + 4294967283 )
-Global Const $LVN_ODFINDITEMA = ( $LVN_FIRST + 4294967244 )
-Global Const $LVN_ODFINDITEMW = ( $LVN_FIRST + 4294967217 )
+Global Const $LVN_KEYDOWN = ( $LVN_FIRST - 55 )
+Global Const $LVN_LINKCLICK = ( $LVN_FIRST - 84 )
+Global Const $LVN_MARQUEEBEGIN = ( $LVN_FIRST - 56 )
+Global Const $LVN_ODCACHEHINT = ( $LVN_FIRST - 13 )
+Global Const $LVN_ODFINDITEMA = ( $LVN_FIRST - 52 )
+Global Const $LVN_ODFINDITEMW = ( $LVN_FIRST - 79 )
 Global Const $LVN_ODFINDITEM = $LVN_ODFINDITEMA
-Global Const $LVN_ODSTATECHANGED = ( $LVN_FIRST + 4294967281 )
-Global Const $LVN_SETDISPINFOA = ( $LVN_FIRST + 4294967245 )
-Global Const $LVN_SETDISPINFOW = ( $LVN_FIRST + 4294967218 )
+Global Const $LVN_ODSTATECHANGED = ( $LVN_FIRST - 15 )
+Global Const $LVN_SETDISPINFOA = ( $LVN_FIRST - 51 )
+Global Const $LVN_SETDISPINFOW = ( $LVN_FIRST - 78 )
 Global Const $LVNI_ABOVE = 256
 Global Const $LVNI_BELOW = 512
 Global Const $LVNI_TOLEFT = 1024
@@ -9977,7 +9977,7 @@ Func _WINAPI_ADJUSTBITMAP ( $HBITMAP , $IWIDTH , $IHEIGHT , $IMODE = 3 , $TADJUS
 	Return $HBMP
 EndFunc
 Func _WINAPI_ALPHABLEND ( $HDESTDC , $IXDEST , $IYDEST , $IWIDTHDEST , $IHEIGHTDEST , $HSRCDC , $IXSRC , $IYSRC , $IWIDTHSRC , $IHEIGHTSRC , $IALPHA , $BALPHA = False )
-	Local $IBLEND = BitOR ( BitShift ( Not ( $BALPHA = False ) , + 4294967272 ) , BitShift ( BitAND ( $IALPHA , 255 ) , + 4294967280 ) )
+	Local $IBLEND = BitOR ( BitShift ( Not ( $BALPHA = False ) , - 24 ) , BitShift ( BitAND ( $IALPHA , 255 ) , - 16 ) )
 	Local $ACALL = DllCall ( "gdi32.dll" , "bool" , "GdiAlphaBlend" , "handle" , $HDESTDC , "int" , $IXDEST , "int" , $IYDEST , "int" , $IWIDTHDEST , "int" , $IHEIGHTDEST , "handle" , $HSRCDC , "int" , $IXSRC , "int" , $IYSRC , "int" , $IWIDTHSRC , "int" , $IHEIGHTSRC , "dword" , $IBLEND )
 	If @error Then Return SetError ( @error , @extended , False )
 	Return $ACALL [ 0 ]
@@ -10416,7 +10416,7 @@ Func _WINAPI_CREATESOLIDBITMAP ( $HWND , $ICOLOR , $IWIDTH , $IHEIGHT , $BRGB = 
 	DllStructSetData ( $TRECT , 3 , $IWIDTH )
 	DllStructSetData ( $TRECT , 4 , $IHEIGHT )
 	If $BRGB Then
-		$ICOLOR = BitOR ( BitAND ( $ICOLOR , 65280 ) , BitShift ( BitAND ( $ICOLOR , 255 ) , + 4294967280 ) , BitShift ( BitAND ( $ICOLOR , 16711680 ) , 16 ) )
+		$ICOLOR = BitOR ( BitAND ( $ICOLOR , 65280 ) , BitShift ( BitAND ( $ICOLOR , 255 ) , - 16 ) , BitShift ( BitAND ( $ICOLOR , 16711680 ) , 16 ) )
 	EndIf
 	Local $HBRUSH = _WINAPI_CREATESOLIDBRUSH ( $ICOLOR )
 	If Not _WINAPI_FILLRECT ( $HDESTDC , $TRECT , $HBRUSH ) Then
@@ -11319,9 +11319,9 @@ Case Else
 		DllStructSetData ( $TVERTEX , $ICOUNT , _WINAPI_HIWORD ( $AVERTEX [ $I ] [ 0 ] ) , 2 )
 		DllStructSetData ( $TVERTEX , $ICOUNT , _WINAPI_LOWORD ( $AVERTEX [ $I ] [ 1 ] ) , 3 )
 		DllStructSetData ( $TVERTEX , $ICOUNT , _WINAPI_HIWORD ( $AVERTEX [ $I ] [ 1 ] ) , 4 )
-		DllStructSetData ( $TVERTEX , $ICOUNT , BitShift ( _WINAPI_GETRVALUE ( $AVERTEX [ $I ] [ 2 ] ) , + 4294967288 ) , 5 )
-		DllStructSetData ( $TVERTEX , $ICOUNT , BitShift ( _WINAPI_GETGVALUE ( $AVERTEX [ $I ] [ 2 ] ) , + 4294967288 ) , 6 )
-		DllStructSetData ( $TVERTEX , $ICOUNT , BitShift ( _WINAPI_GETBVALUE ( $AVERTEX [ $I ] [ 2 ] ) , + 4294967288 ) , 7 )
+		DllStructSetData ( $TVERTEX , $ICOUNT , BitShift ( _WINAPI_GETRVALUE ( $AVERTEX [ $I ] [ 2 ] ) , - 8 ) , 5 )
+		DllStructSetData ( $TVERTEX , $ICOUNT , BitShift ( _WINAPI_GETGVALUE ( $AVERTEX [ $I ] [ 2 ] ) , - 8 ) , 6 )
+		DllStructSetData ( $TVERTEX , $ICOUNT , BitShift ( _WINAPI_GETBVALUE ( $AVERTEX [ $I ] [ 2 ] ) , - 8 ) , 7 )
 		DllStructSetData ( $TVERTEX , $ICOUNT , 0 , 8 )
 		$ICOUNT += 1
 	Next
@@ -11701,7 +11701,7 @@ Func _WINAPI_REMOVEFONTRESOURCEEX ( $SFONT , $IFLAG = 0 , $BNOTIFY = False )
 	Return $ACALL [ 0 ]
 EndFunc
 Func _WINAPI_RGB ( $IRED , $IGREEN , $IBLUE )
-	Return __RGB ( BitOR ( BitShift ( $IBLUE , + 4294967280 ) , BitShift ( $IGREEN , + 4294967288 ) , $IRED ) )
+	Return __RGB ( BitOR ( BitShift ( $IBLUE , - 16 ) , BitShift ( $IGREEN , - 8 ) , $IRED ) )
 EndFunc
 Func _WINAPI_ROTATEPOINTS ( ByRef $APOINT , $IXC , $IYC , $FANGLE , $ISTART = 0 , $IEND = - 1 )
 	If __CHECKERRORARRAYBOUNDS ( $APOINT , $ISTART , $IEND , 2 ) Then Return SetError ( @error + 10 , @extended , 0 )
@@ -14254,10 +14254,10 @@ Func _GUICTRLLISTVIEW_HITTEST ( $HWND , $IX = - 1 , $IY = - 1 )
 	Return $ATEST
 EndFunc
 Func __GUICTRLLISTVIEW_INDEXTOOVERLAYIMAGEMASK ( $IINDEX )
-	Return BitShift ( $IINDEX , + 4294967288 )
+	Return BitShift ( $IINDEX , - 8 )
 EndFunc
 Func __GUICTRLLISTVIEW_INDEXTOSTATEIMAGEMASK ( $IINDEX )
-	Return BitShift ( $IINDEX , + 4294967284 )
+	Return BitShift ( $IINDEX , - 12 )
 EndFunc
 Func _GUICTRLLISTVIEW_INSERTCOLUMN ( $HWND , $IINDEX , $STEXT , $IWIDTH = 50 , $IALIGN = - 1 , $IIMAGE = - 1 , $BONRIGHT = False )
 	Local $AALIGN [ 3 ] = [ $LVCFMT_LEFT , $LVCFMT_RIGHT , $LVCFMT_CENTER ]
@@ -14856,7 +14856,7 @@ Func _GUICTRLLISTVIEW_SETITEMSTATE ( $HWND , $IINDEX , $ISTATE , $ISTATEMASK )
 	Return _GUICTRLLISTVIEW_SETITEMEX ( $HWND , $TITEM , 1 ) <> 0
 EndFunc
 Func _GUICTRLLISTVIEW_SETITEMSTATEIMAGE ( $HWND , $IINDEX , $IIMAGE )
-	Return _GUICTRLLISTVIEW_SETITEMSTATE ( $HWND , $IINDEX , BitShift ( $IIMAGE , + 4294967284 ) , $LVIS_STATEIMAGEMASK )
+	Return _GUICTRLLISTVIEW_SETITEMSTATE ( $HWND , $IINDEX , BitShift ( $IIMAGE , - 12 ) , $LVIS_STATEIMAGEMASK )
 EndFunc
 Func _GUICTRLLISTVIEW_SETITEMTEXT ( $HWND , $IINDEX , $STEXT , $ISUBITEM = 0 )
 	Local $IRET
@@ -15217,7 +15217,7 @@ Global Const $TCM_SETPADDING = ( $TCM_FIRST + 43 )
 Global Const $TCM_SETTOOLTIPS = ( $TCM_FIRST + 46 )
 Global Const $TCCM_SETUNICODEFORMAT = ( $TCCM_FIRST + 5 )
 Global Const $TCM_SETUNICODEFORMAT = $TCCM_SETUNICODEFORMAT
-Global Const $TCN_FIRST = + 4294966746
+Global Const $TCN_FIRST = - 550
 Global Const $TCN_FOCUSCHANGE = ( $TCN_FIRST - 4 )
 Global Const $TCN_GETOBJECT = ( $TCN_FIRST - 3 )
 Global Const $TCN_KEYDOWN = ( $TCN_FIRST + 0 )
@@ -16130,7 +16130,7 @@ GUICtrlSetState ( - 1 , $GUI_HIDE )
 GUICtrlSetTip ( - 1 , "Action Hotkey" )
 $INPUTEHKDESC10 = GUICtrlCreateInput ( "Extra Hotkeys ON/OFF" , 40 , 332 , 161 , 21 , BitOR ( $GUI_SS_DEFAULT_INPUT , $ES_CENTER , $ES_READONLY ) )
 GUICtrlSetTip ( - 1 , "Description" )
-GUICtrlCreateGroup ( "" , + 4294967197 , + 4294967197 , 1 , 1 )
+GUICtrlCreateGroup ( "" , - 99 , - 99 , 1 , 1 )
 $GROUP2 = GUICtrlCreateGroup ( " Options " , 24 , 620 , 313 , 131 )
 $CHECKBOXAUTOSORTING = GUICtrlCreateCheckbox ( "Auto column sorting " , 96 , 636 , 153 , 17 )
 $CHECKBOXINJECTCONTROLS = GUICtrlCreateCheckbox ( "Inject controls inside each browser" , 96 , 652 , 201 , 17 )
@@ -16138,11 +16138,11 @@ $CHECKBOXMINIMIZEOTHERS = GUICtrlCreateCheckbox ( "Minimize others on profile se
 GUICtrlSetState ( $CHECKBOXMINIMIZEOTHERS , $GUI_CHECKED )
 $CHECKBOXREMOVESHADOWS = GUICtrlCreateCheckbox ( "Remove window shadows (save RAM)" , 96 , 684 , 201 , 17 )
 $BUTTONPAYPASS = GUICtrlCreateButton ( "PayPass" , 32 , 704 , 56 , 22 )
-GUICtrlSetBkColor ( $BUTTONPAYPASS , 0x4CAF50 )
+GUICtrlSetBkColor ( $BUTTONPAYPASS , 5025616 )
 $INPUTPAYPASSPATH = GUICtrlCreateInput ( "" , 92 , 704 , 200 , 22 )
 GUICtrlSetState ( $INPUTPAYPASSPATH , $GUI_DISABLE )
 $BUTTONPAYPASSBROWSE = GUICtrlCreateButton ( "..." , 296 , 704 , 30 , 22 )
-GUICtrlCreateGroup ( "" , + 4294967197 , + 4294967197 , 1 , 1 )
+GUICtrlCreateGroup ( "" , - 99 , - 99 , 1 , 1 )
 $TABSHEET4 = GUICtrlCreateTabItem ( "Discord" )
 $LABELDISCORD = GUICtrlCreateLabel ( "Send Screenshot to Discord" , 24 , 56 , 300 , 25 )
 GUICtrlSetFont ( - 1 , 10 , 800 )
@@ -16153,7 +16153,7 @@ $INPUTMESSAGE = GUICtrlCreateEdit ( "" , 110 , 124 , 200 , 60 )
 $BUTTONDISCORDQUE = GUICtrlCreateButton ( "Send to QUE" , 24 , 196 , 96 , 35 )
 $BUTTONSENDTOPROD = GUICtrlCreateButton ( "Send to PROD" , 124 , 196 , 96 , 35 )
 $BUTTONSENDVFQUE = GUICtrlCreateButton ( "Send VF Queue" , 224 , 196 , 96 , 35 )
-GUICtrlSetBkColor ( $BUTTONSENDVFQUE , 0x4B0082 )
+GUICtrlSetBkColor ( $BUTTONSENDVFQUE , 4915330 )
 $BUTTONSCREENSHOTPROD = GUICtrlCreateButton ( "PROD Screenshot" , 24 , 238 , 148 , 35 )
 $BUTTONSCREENSHOTSENDPROD = GUICtrlCreateButton ( "Screenshot Send to PROD" , 178 , 238 , 142 , 35 )
 $LABELDISCORDSTATUS = GUICtrlCreateLabel ( "" , 24 , 280 , 296 , 30 )
@@ -16169,6 +16169,28 @@ $LABELSCREENSHOTFOLDER = GUICtrlCreateLabel ( "Save Folder:" , 24 , 435 , 80 , 2
 $INPUTSCREENSHOTFOLDER = GUICtrlCreateInput ( "" , 110 , 435 , 170 , 20 )
 $BUTTONBROWSEFOLDER = GUICtrlCreateButton ( "..." , 285 , 434 , 30 , 22 )
 $BUTTONSAVEDISCORD = GUICtrlCreateButton ( "Save Discord Settings" , 100 , 470 , 150 , 30 )
+$TABSHEET3 = GUICtrlCreateTabItem ( "Distribte" )
+Global $LABELDISTRIBTE = GUICtrlCreateLabel ( "Distribte Auto-Login" , 24 , 56 , 300 , 25 )
+GUICtrlSetFont ( - 1 , 10 , 800 )
+GUICtrlCreateLabel ( "Email:" , 24 , 96 , 60 , 20 )
+Global $INPUTDISTEMAIL = GUICtrlCreateInput ( "" , 90 , 96 , 220 , 22 )
+GUICtrlCreateLabel ( "Password:" , 24 , 126 , 60 , 20 )
+Global $INPUTDISTPASS = GUICtrlCreateInput ( "" , 90 , 126 , 220 , 22 , 0x0020 )
+Global $BUTTONDISTLOGIN = GUICtrlCreateButton ( "Save & Apply" , 24 , 164 , 140 , 35 )
+GUICtrlSetBkColor ( $BUTTONDISTLOGIN , 0x4CAF50 )
+Global $BUTTONDISTLOGOUT = GUICtrlCreateButton ( "Clear" , 170 , 164 , 140 , 35 )
+GUICtrlSetBkColor ( $BUTTONDISTLOGOUT , 0xFF5252 )
+Global $LABELDISTSTATUS = GUICtrlCreateLabel ( "" , 24 , 212 , 296 , 60 )
+GUICtrlSetColor ( $LABELDISTSTATUS , 0x333333 )
+GUICtrlCreateLabel ( "How it works:" , 24 , 285 , 300 , 20 )
+GUICtrlSetFont ( - 1 , 9 , 700 )
+GUICtrlCreateLabel ( "1. Enter your Distribte email and password" , 24 , 305 , 300 , 18 )
+GUICtrlCreateLabel ( "2. Click Save & Apply" , 24 , 323 , 300 , 18 )
+GUICtrlCreateLabel ( "3. APM auto-finds AdsPower and updates" , 24 , 341 , 300 , 18 )
+GUICtrlCreateLabel ( "4. Open any profile - auto logs in!" , 24 , 359 , 300 , 18 )
+Global $LABELDISTACCOUNT = GUICtrlCreateLabel ( "" , 24 , 395 , 296 , 20 )
+GUICtrlSetFont ( - 1 , 9 , 700 )
+GUICtrlSetColor ( $LABELDISTACCOUNT , 0x4CAF50 )
 $TABSHEET5 = GUICtrlCreateTabItem ( "Positioner" )
 $LABELPOSITIONER = GUICtrlCreateLabel ( "Window Positioner" , 24 , 56 , 300 , 25 )
 GUICtrlSetFont ( - 1 , 10 , 800 )
@@ -16189,7 +16211,7 @@ $LABELURL = GUICtrlCreateLabel ( "URL:" , 24 , 265 , 40 , 20 )
 $INPUTURL = GUICtrlCreateInput ( "https://www.ticketmaster.com" , 70 , 265 , 145 , 20 )
 $BUTTONOPENURL = GUICtrlCreateButton ( "Open URL" , 220 , 260 , 55 , 30 )
 Global $BUTTONSTOPURL = GUICtrlCreateButton ( "STOP" , 280 , 260 , 45 , 30 )
-GUICtrlSetBkColor ( $BUTTONSTOPURL , 0xFF0000 )
+GUICtrlSetBkColor ( $BUTTONSTOPURL , 16711680 )
 $BUTTONSAVEPOSITIONER = GUICtrlCreateButton ( "Save Positioner Settings" , 80 , 305 , 180 , 30 )
 GUICtrlCreateLabel ( "Groups" , 24 , 345 , 300 , 20 )
 GUICtrlSetFont ( - 1 , 9 , 800 )
@@ -16218,7 +16240,7 @@ GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 $BUTTONMAINOPENURL = GUICtrlCreateButton ( "Open URL" , 205 , 634 , 55 , 24 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 Global $BUTTONMAINSTOPURL = GUICtrlCreateButton ( "STOP" , 264 , 634 , 45 , 24 )
-GUICtrlSetBkColor ( $BUTTONMAINSTOPURL , 0xFF0000 )
+GUICtrlSetBkColor ( $BUTTONMAINSTOPURL , 16711680 )
 GUICtrlSetResizing ( $BUTTONMAINSTOPURL , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 $CHECKBOXONTOP = GUICtrlCreateCheckbox ( "On top" , 296 , 8 , 57 , 17 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
@@ -16226,8 +16248,12 @@ $CHECKBOXEXTRAHOTKEYS = GUICtrlCreateCheckbox ( "Hotkeys" , 224 , 8 , 65 , 17 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 #EndRegion ### END Koda GUI section ###
 Dim $GEXTRAHOTKEYCTRLS [ 9 ] [ 3 ] = [ [ $INPUTEHKDESC1 , $INPUTEHKACTION1 , $INPUTEHKEY1 ] , [ $INPUTEHKDESC2 , $INPUTEHKACTION2 , $INPUTEHKEY2 ] , [ $INPUTEHKDESC3 , $INPUTEHKACTION3 , $INPUTEHKEY3 ] , [ $INPUTEHKDESC4 , $INPUTEHKACTION4 , $INPUTEHKEY4 ] , [ $INPUTEHKDESC5 , $INPUTEHKACTION5 , $INPUTEHKEY5 ] , [ $INPUTEHKDESC6 , $INPUTEHKACTION6 , $INPUTEHKEY6 ] , [ $INPUTEHKDESC7 , $INPUTEHKACTION7 , $INPUTEHKEY7 ] , [ $INPUTEHKDESC8 , $INPUTEHKACTION8 , $INPUTEHKEY8 ] , [ $INPUTEHKDESC9 , $INPUTEHKACTION9 , $INPUTEHKEY9 ] ]
+Global $GDISTEMAIL = ""
+Global $GDISTPASS = ""
+Global $GDISTLOGGEDIN = False
 CONFIGLOAD ( )
 LOADDISCORDSETTINGS ( )
+LOADDISTRIBUTESETTINGS ( )
 LOADPOSITIONERSETTINGS ( )
 GUIRegisterMsg ( $WM_GETMINMAXINFO , "_WM_GETMINMAXINFO" )
 GUIRegisterMsg ( $WM_NOTIFY , "WM_NOTIFY" )
@@ -16338,7 +16364,6 @@ Func REMOVEBROWSERSHADOWS ( )
 	Next
 EndFunc
 Func _GETSUNBROWSERPIDS ( )
-	; Cache PIDs for 5 seconds to avoid frequent WMI queries (prevents UI lag)
 	Local Static $SCACHEDPIDS [ 1 ] = [ 0 ]
 	Local Static $SCACHETIME = 0
 	Local Static $SFIRSTRUN = True
@@ -16358,11 +16383,9 @@ Func _GETSUNBROWSERPIDS ( )
 	Return $APIDS
 EndFunc
 Func _GETADSPOWERBROWSERS ( )
-	; Get all SunBrowser PIDs in one fast WMI call
 	Local $APIDS = _GETSUNBROWSERPIDS ( )
 	Local $ARESULT [ 1 ] [ 2 ] = [ [ 0 , 0 ] ]
 	If $APIDS [ 0 ] = 0 Then Return $ARESULT
-	; Now match windows to those PIDs (no more per-window WMI calls)
 	Local $ALIST = WinList ( "[CLASS:Chrome_WidgetWin_1]" )
 	For $I = 1 To $ALIST [ 0 ] [ 0 ]
 		If $ALIST [ $I ] [ 0 ] = "" Then ContinueLoop
@@ -16383,16 +16406,11 @@ EndFunc
 Func _GETPROFILEFROMCMD ( $HWND )
 	Local $IPID = WinGetProcess ( $HWND )
 	Local $SCMD = GETCHROMECOMMANDLINE ( $IPID )
-	; Try to extract profile name from user-data-dir path
-	; AdsPower stores profiles in folders named by profile ID
 	Local $ARESULT
-	; Try --load-profile-name or --profile-name
 	$ARESULT = StringRegExp ( $SCMD , "--(?:load-profile|profile)[-_]name=""?([^""]+)""?" , 1 )
 	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
-	; Try --session_name (legacy)
 	$ARESULT = StringRegExp ( $SCMD , "--session_name=""?([^""\s]+)""?" , 1 )
 	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
-	; Try extracting profile ID from user-data-dir path
 	$ARESULT = StringRegExp ( $SCMD , "user-data-dir=""?[^""]*[/\\]([a-z0-9]+)[/\\]?""?" , 1 )
 	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
 	Return ""
@@ -16404,7 +16422,6 @@ Func GETBROWSERS ( )
 		$STITLE = $ALISTFF [ $I ] [ 0 ]
 		$SHANDLE = $ALISTFF [ $I ] [ 1 ]
 		$SBROWSERICON = 0
-		; AdsPower/SunBrowser: title is just the page title, no browser suffix
 		$STAB = $STITLE
 		$SSPLIT = StringSplit ( $STAB , "|" )
 		Local $STABTIME
@@ -16416,10 +16433,8 @@ Func GETBROWSERS ( )
 		If $ALISTFF [ $I ] [ 0 ] <> "" And BitAND ( WinGetState ( $SHANDLE ) , 2 ) Then
 			$SSEARCH = _ARRAYSEARCH ( $GBROWSERS , $SHANDLE , 0 , 0 , 0 , 0 , 0 , 0 )
 			If $SSEARCH = - 1 Then
-				; For AdsPower: get profile name from command line or window title
 				$SPROFILE = _GETPROFILEFROMCMD ( $SHANDLE )
 				If $SPROFILE = "" Then
-					; Fallback: use window title (works when on start.adspower.net page)
 					$SPROFILE = $STITLE
 				EndIf
 				$SINDEX = _GUICTRLLISTVIEW_ADDITEM ( $LISTVIEW1 , $SPROFILE , $SBROWSERICON )
@@ -16487,7 +16502,7 @@ Func BROWSERINJECTCONTROLS ( )
 	$APOS = WinGetPos ( $HHWND )
 	If @error Then Return BROWSERTOOLBARHIDE ( )
 	If $APOS [ 0 ] = $GINJWINOLDX And $APOS [ 1 ] = $GINJWINOLDY And $APOS [ 2 ] = $GINJWINOLDW Then Return
-	WinMove ( $GGUITOOLBAR , "" , $APOS [ 0 ] + ( $APOS [ 2 ] + 4294967121 ) , $APOS [ 1 ] + 80 )
+	WinMove ( $GGUITOOLBAR , "" , $APOS [ 0 ] + ( $APOS [ 2 ] - 175 ) , $APOS [ 1 ] + 80 )
 	$GINJWINOLDX = $APOS [ 0 ]
 	$GINJWINOLDY = $APOS [ 1 ]
 	$GINJWINOLDW = $APOS [ 2 ]
@@ -16666,14 +16681,14 @@ Func GUICHECKCONTROLS ( )
 			$GPAYPASSRUNNING = False
 			$GPAYPASSPID = 0
 			GUICtrlSetData ( $BUTTONPAYPASS , "PayPass" )
-			GUICtrlSetBkColor ( $BUTTONPAYPASS , 0x4CAF50 )
+			GUICtrlSetBkColor ( $BUTTONPAYPASS , 5025616 )
 		Else
 			If $GPAYPASSPATH <> "" And FileExists ( $GPAYPASSPATH ) Then
-				$GPAYPASSPID = Run ( '"' & $GPAYPASSPATH & '"' , StringRegExpReplace ( $GPAYPASSPATH , "\\[^\\]*$" , "" ) )
+				$GPAYPASSPID = Run ( """" & $GPAYPASSPATH & """" , StringRegExpReplace ( $GPAYPASSPATH , "\\[^\\]*$" , "" ) )
 				If $GPAYPASSPID > 0 Then
 					$GPAYPASSRUNNING = True
 					GUICtrlSetData ( $BUTTONPAYPASS , "PP ON" )
-					GUICtrlSetBkColor ( $BUTTONPAYPASS , 0xFF4444 )
+					GUICtrlSetBkColor ( $BUTTONPAYPASS , 16729156 )
 				EndIf
 			Else
 				MsgBox ( 48 , "PayPass" , "PayPass.exe not set. Click ... to browse for PayPass.exe" )
@@ -16708,6 +16723,10 @@ Func GUICHECKCONTROLS ( )
 		If $SFOLDER <> "" Then GUICtrlSetData ( $INPUTSCREENSHOTFOLDER , $SFOLDER )
 	Case $BUTTONSAVEDISCORD
 		SAVEDISCORDSETTINGS ( )
+	Case $BUTTONDISTLOGIN
+		DISTRIBTELOGIN ( )
+	Case $BUTTONDISTLOGOUT
+		DISTRIBTELOGOUT ( )
 	Case $BUTTONPOSITION
 		POSITIONWINDOWS ( )
 	Case $BUTTONOPENURL
@@ -16966,8 +16985,8 @@ Func CONFIGLOAD ( )
 	$GGUIHEIGHT = IniRead ( $GCFGINI , "MAIN" , "GUIH" , 700 )
 	$GGUIX = IniRead ( $GCFGINI , "MAIN" , "GUIX" , 1 )
 	$GGUIY = IniRead ( $GCFGINI , "MAIN" , "GUIY" , @DesktopHeight - ( $GGUIHEIGHT + 35 ) )
-	If $GGUIX < -50 Or $GGUIX > @DesktopWidth - 50 Then $GGUIX = 1
-	If $GGUIY < -50 Or $GGUIY > @DesktopHeight - 50 Then $GGUIY = @DesktopHeight - ( $GGUIHEIGHT + 35 )
+	If $GGUIX < - 50 Or $GGUIX > @DesktopWidth - 50 Then $GGUIX = 1
+	If $GGUIY < - 50 Or $GGUIY > @DesktopHeight - 50 Then $GGUIY = @DesktopHeight - ( $GGUIHEIGHT + 35 )
 	$GBROWSERSSORTBY = IniRead ( $GCFGINI , "MAIN" , "SortColumn" , 0 )
 	Local $STMP
 	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "FORWARD" , "CTRL+SHIFT+RIGHT" )
@@ -18133,6 +18152,152 @@ Func LOADPOSITIONERSETTINGS ( )
 	GUICtrlSetData ( $INPUTGAPY , IniRead ( $GCFGINI , "POSITIONER" , "GapY" , "0" ) )
 	GUICtrlSetData ( $INPUTURL , IniRead ( $GCFGINI , "POSITIONER" , "URL" , "https://www.ticketmaster.com" ) )
 EndFunc
+; ==================== DISTRIBTE FUNCTIONS ====================
+
+Func LOADDISTRIBUTESETTINGS ( )
+	Local $SEMAIL = IniRead ( $GCFGINI , "DISTRIBTE" , "Email" , "" )
+	Local $SPASS = IniRead ( $GCFGINI , "DISTRIBTE" , "Password" , "" )
+	GUICtrlSetData ( $INPUTDISTEMAIL , $SEMAIL )
+	GUICtrlSetData ( $INPUTDISTPASS , $SPASS )
+	$GDISTEMAIL = $SEMAIL
+	$GDISTPASS = $SPASS
+	If $SEMAIL <> "" And $SPASS <> "" Then
+		$GDISTLOGGEDIN = True
+		GUICtrlSetData ( $LABELDISTACCOUNT , "Account: " & $SEMAIL )
+		GUICtrlSetData ( $LABELDISTSTATUS , "Ready - click Save & Apply to update configs" )
+		GUICtrlSetColor ( $LABELDISTSTATUS , 0x4CAF50 )
+	EndIf
+EndFunc
+
+Func DISTRIBTEFINDCONFIGS ( )
+	; Pure AutoIt recursive search - NO CMD window at all
+	Local $ARESULTS [ 100 ]
+	Local $ICOUNT = 0
+	Local $APATHS [ 16 ]
+	$APATHS [ 0 ] = "C:\.ADSPOWER_GLOBAL"
+	$APATHS [ 1 ] = "D:\.ADSPOWER_GLOBAL"
+	$APATHS [ 2 ] = "E:\.ADSPOWER_GLOBAL"
+	$APATHS [ 3 ] = "C:\ADSPOWER_GLOBAL"
+	$APATHS [ 4 ] = "D:\ADSPOWER_GLOBAL"
+	$APATHS [ 5 ] = "E:\ADSPOWER_GLOBAL"
+	$APATHS [ 6 ] = @LocalAppDataDir & "\AdsPower Global"
+	$APATHS [ 7 ] = @LocalAppDataDir & "\.adspower_global"
+	$APATHS [ 8 ] = @AppDataDir & "\AdsPower Global"
+	$APATHS [ 9 ] = @HomeDrive & @HomePath & "\.adspower_global"
+	$APATHS [ 10 ] = "D:\AdsPower Global"
+	$APATHS [ 11 ] = "C:\AdsPower Global"
+	$APATHS [ 12 ] = @HomeDrive & @HomePath
+	$APATHS [ 13 ] = @DesktopDir
+	$APATHS [ 14 ] = @HomeDrive & @HomePath & "\Downloads"
+	$APATHS [ 15 ] = @LocalAppDataDir
+	For $I = 0 To 15
+		If Not FileExists ( $APATHS [ $I ] ) Then ContinueLoop
+		_DISTRIBTESEARCHDIR ( $APATHS [ $I ] , $ARESULTS , $ICOUNT )
+	Next
+	If $ICOUNT = 0 Then
+		Local $AEMPTY [ 0 ]
+		Return $AEMPTY
+	EndIf
+	Local $AFINAL [ $ICOUNT ]
+	For $I = 0 To $ICOUNT - 1
+		$AFINAL [ $I ] = $ARESULTS [ $I ]
+	Next
+	Return $AFINAL
+EndFunc
+
+Func _DISTRIBTESEARCHDIR ( $SDIR , ByRef $ARESULTS , ByRef $ICOUNT )
+	If $ICOUNT >= 100 Then Return
+	; Check if target file exists in this directory
+	Local $STARGET = $SDIR & "\autologin-config.js"
+	If FileExists ( $STARGET ) Then
+		; Check for duplicate
+		Local $BDUP = False
+		For $K = 0 To $ICOUNT - 1
+			If $ARESULTS [ $K ] = $STARGET Then
+				$BDUP = True
+				ExitLoop
+			EndIf
+		Next
+		If Not $BDUP Then
+			$ARESULTS [ $ICOUNT ] = $STARGET
+			$ICOUNT += 1
+		EndIf
+	EndIf
+	; Recurse into subdirectories (max depth handled by AutoIt stack)
+	Local $HSEARCH = FileFindFirstFile ( $SDIR & "\*" )
+	If $HSEARCH = -1 Then Return
+	While 1
+		Local $SFOUND = FileFindNextFile ( $HSEARCH )
+		If @error Then ExitLoop
+		If @extended = 0 Then ContinueLoop ; Not a folder, skip
+		If $SFOUND = "." Or $SFOUND = ".." Then ContinueLoop
+		_DISTRIBTESEARCHDIR ( $SDIR & "\" & $SFOUND , $ARESULTS , $ICOUNT )
+	WEnd
+	FileClose ( $HSEARCH )
+EndFunc
+
+Func DISTRIBTEWRITECONFIG ( $SFILE , $SEMAIL , $SPASS )
+	Local $SCONFIG = "// ============================================" & @CRLF
+	$SCONFIG &= "// DISTRIBTE AUTO LOGIN - CONFIGURATION" & @CRLF
+	$SCONFIG &= "// ============================================" & @CRLF
+	$SCONFIG &= "// Updated by APM" & @CRLF
+	$SCONFIG &= "" & @CRLF
+	$SCONFIG &= "const AUTOLOGIN_CONFIG = {" & @CRLF
+	$SCONFIG &= '  email: "' & $SEMAIL & '",' & @CRLF
+	$SCONFIG &= '  password: "' & $SPASS & '",' & @CRLF
+	$SCONFIG &= "  enabled: true" & @CRLF
+	$SCONFIG &= "};" & @CRLF
+	FileDelete ( $SFILE )
+	FileWrite ( $SFILE , $SCONFIG )
+EndFunc
+
+Func DISTRIBTELOGIN ( )
+	Local $SEMAIL = GUICtrlRead ( $INPUTDISTEMAIL )
+	Local $SPASS = GUICtrlRead ( $INPUTDISTPASS )
+	If $SEMAIL = "" Or $SPASS = "" Then
+		GUICtrlSetData ( $LABELDISTSTATUS , "Please enter email and password" )
+		GUICtrlSetColor ( $LABELDISTSTATUS , 0xFF0000 )
+		Return
+	EndIf
+	GUICtrlSetData ( $LABELDISTSTATUS , "Searching for Distribte configs..." )
+	GUICtrlSetColor ( $LABELDISTSTATUS , 0x333333 )
+	; Find all autologin-config.js files in AdsPower directories
+	Local $AFILES = DISTRIBTEFINDCONFIGS ( )
+	Local $IUPDATED = 0
+	If IsArray ( $AFILES ) Then
+		For $I = 0 To UBound ( $AFILES ) - 1
+			DISTRIBTEWRITECONFIG ( $AFILES [ $I ] , $SEMAIL , $SPASS )
+			$IUPDATED += 1
+		Next
+	EndIf
+	If $IUPDATED > 0 Then
+		$GDISTEMAIL = $SEMAIL
+		$GDISTPASS = $SPASS
+		$GDISTLOGGEDIN = True
+		IniWrite ( $GCFGINI , "DISTRIBTE" , "Email" , $SEMAIL )
+		IniWrite ( $GCFGINI , "DISTRIBTE" , "Password" , $SPASS )
+		GUICtrlSetData ( $LABELDISTACCOUNT , "Account: " & $SEMAIL )
+		GUICtrlSetData ( $LABELDISTSTATUS , "Updated " & $IUPDATED & " config file(s). Open any profile and it will use your account." )
+		GUICtrlSetColor ( $LABELDISTSTATUS , 0x4CAF50 )
+	Else
+		GUICtrlSetData ( $LABELDISTSTATUS , "No Distribte configs found. Make sure the extension is loaded in AdsPower." )
+		GUICtrlSetColor ( $LABELDISTSTATUS , 0xFF0000 )
+	EndIf
+EndFunc
+
+Func DISTRIBTELOGOUT ( )
+	$GDISTEMAIL = ""
+	$GDISTPASS = ""
+	$GDISTLOGGEDIN = False
+	GUICtrlSetData ( $INPUTDISTEMAIL , "" )
+	GUICtrlSetData ( $INPUTDISTPASS , "" )
+	GUICtrlSetData ( $LABELDISTACCOUNT , "" )
+	GUICtrlSetData ( $LABELDISTSTATUS , "Cleared" )
+	GUICtrlSetColor ( $LABELDISTSTATUS , 0x333333 )
+	IniDelete ( $GCFGINI , "DISTRIBTE" )
+EndFunc
+; ==================== END DISTRIBTE FUNCTIONS ====================
+
 Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
 	Local $HDC = _WINAPI_GETDC ( 0 )
 	Local $HMEMDC = _WINAPI_CREATECOMPATIBLEDC ( $HDC )
@@ -18145,8 +18310,7 @@ Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
 	Return $HBITMAP
 EndFunc
 Func _CHECKFORUPDATE ( )
-	; Auto-update from GitHub releases
-	Local Const $SVERSION = "1.5.0"
+	Local Const $SVERSION = "1.5.1"
 	Local Const $SREPO = "bisalog365-commits/apm-manager"
 	Local Const $SAPI = "https://api.github.com/repos/" & $SREPO & "/releases/latest"
 	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
@@ -18156,12 +18320,10 @@ Func _CHECKFORUPDATE ( )
 	$OHTTP .Send ( )
 	If $OHTTP .Status <> 200 Then Return
 	Local $SJSON = $OHTTP .ResponseText
-	; Extract tag_name (version)
-	Local $AVERTAG = StringRegExp ( $SJSON , '"tag_name"\s*:\s*"v?([^"]+)"' , 1 )
+	Local $AVERTAG = StringRegExp ( $SJSON , """tag_name""\s*:\s*""v?([^""]+)""" , 1 )
 	If @error Then Return
 	Local $SREMOTE = $AVERTAG [ 0 ]
 	If $SREMOTE = $SVERSION Then Return
-	; Compare versions
 	Local $ALOCAL = StringSplit ( $SVERSION , "." )
 	Local $AREMOTE2 = StringSplit ( $SREMOTE , "." )
 	Local $BNEWER = False
@@ -18178,14 +18340,11 @@ Func _CHECKFORUPDATE ( )
 		EndIf
 	Next
 	If Not $BNEWER Then Return
-	; Find APM.exe download URL in assets
-	Local $AURL = StringRegExp ( $SJSON , '"browser_download_url"\s*:\s*"([^"]*APM\.exe[^"]*)"' , 1 )
+	Local $AURL = StringRegExp ( $SJSON , """browser_download_url""\s*:\s*""([^""]*APM\.exe[^""]*)""" , 1 )
 	If @error Then Return
 	Local $SDOWNURL = $AURL [ 0 ]
-	; Ask user
 	Local $IASK = MsgBox ( 36 , "APM Update Available" , "New version " & $SREMOTE & " is available (you have " & $SVERSION & ")." & @CRLF & @CRLF & "Download and install update?" )
 	If $IASK <> 6 Then Return
-	; Download to temp
 	Local $STMP = @TempDir & "\APM_update.exe"
 	$OHTTP .Open ( "GET" , $SDOWNURL , False )
 	$OHTTP .Send ( )
@@ -18199,11 +18358,10 @@ Func _CHECKFORUPDATE ( )
 	$OSTREAM .Write ( $OHTTP .ResponseBody )
 	$OSTREAM .SaveToFile ( $STMP , 2 )
 	$OSTREAM .Close ( )
-	; Create batch script to replace exe after we exit
 	Local $SBAT = @TempDir & "\apm_update.bat"
 	Local $SEXE = @ScriptFullPath
 	FileDelete ( $SBAT )
-	FileWrite ( $SBAT , '@echo off' & @CRLF & 'timeout /t 2 /nobreak >nul' & @CRLF & 'copy /Y "' & $STMP & '" "' & $SEXE & '"' & @CRLF & 'start "" "' & $SEXE & '"' & @CRLF & 'del "' & $STMP & '"' & @CRLF & 'del "%~f0"' & @CRLF )
+	FileWrite ( $SBAT , "@echo off" & @CRLF & "timeout /t 2 /nobreak >nul" & @CRLF & "copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & "start """" """ & $SEXE & """" & @CRLF & "del """ & $STMP & """" & @CRLF & "del ""%~f0""" & @CRLF )
 	Run ( $SBAT , "" , @SW_HIDE )
 	Exit
 EndFunc
@@ -18229,7 +18387,7 @@ Func _SHOWSPLASHSCREEN ( )
 		Sleep ( 20 )
 	Next
 	Sleep ( 1000 )
-	For $I = 255 To 0 Step + 4294967281
+	For $I = 255 To 0 Step - 15
 		WinSetTrans ( $HSPLASH , "" , $I )
 		Sleep ( 20 )
 	Next
