@@ -17986,7 +17986,6 @@ Func SWITCHGROUP ( $IGROUPINDEX )
 			EndIf
 		EndIf
 	Next
-	Sleep ( 100 )
 	Local $IIDX = 0
 	For $I = $ISTART To $IEND
 		Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
@@ -17997,7 +17996,6 @@ Func SWITCHGROUP ( $IGROUPINDEX )
 			Local $IX = $ICOL * ( $IWIDTH + $IGAPX )
 			Local $IY = $IROW * ( $IHEIGHT + $IGAPY )
 			DllCall ( "user32.dll" , "bool" , "ShowWindow" , "hwnd" , $HWND , "int" , 1 )
-			Sleep ( 50 )
 			DllCall ( "user32.dll" , "bool" , "SetWindowPos" , "hwnd" , $HWND , "hwnd" , 0 , "int" , $IX , "int" , $IY , "int" , $IWIDTH , "int" , $IHEIGHT , "uint" , 64 )
 		EndIf
 		$IIDX += 1
@@ -18069,7 +18067,6 @@ Func SWITCHGROUPMAIN ( $IGROUPINDEX )
 			EndIf
 		EndIf
 	Next
-	Sleep ( 100 )
 	Local $IIDX = 0
 	For $I = $ISTART To $IEND
 		Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
@@ -18080,7 +18077,6 @@ Func SWITCHGROUPMAIN ( $IGROUPINDEX )
 			Local $IX = $ICOL * ( $IWIDTH + $IGAPX )
 			Local $IY = $IROW * ( $IHEIGHT + $IGAPY )
 			DllCall ( "user32.dll" , "bool" , "ShowWindow" , "hwnd" , $HWND , "int" , 1 )
-			Sleep ( 50 )
 			DllCall ( "user32.dll" , "bool" , "SetWindowPos" , "hwnd" , $HWND , "hwnd" , 0 , "int" , $IX , "int" , $IY , "int" , $IWIDTH , "int" , $IHEIGHT , "uint" , 64 )
 		EndIf
 		$IIDX += 1
@@ -18310,7 +18306,7 @@ Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
 	Return $HBITMAP
 EndFunc
 Func _CHECKFORUPDATE ( )
-	Local Const $SVERSION = "2.3"
+	Local Const $SVERSION = "2.4"
 	Local Const $SREPO = "bisalog365-commits/apm-manager"
 	Local Const $SAPI = "https://api.github.com/repos/" & $SREPO & "/releases/latest"
 	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
