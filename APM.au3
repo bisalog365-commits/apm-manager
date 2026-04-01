@@ -3,10 +3,7 @@
 #AutoIt3Wrapper_Icon=apm.ico
 #AutoIt3Wrapper_Res_CompanyName=Nickets
 #AutoIt3Wrapper_Res_Description=AdsPower Window Manager
-#AutoIt3Wrapper_Res_Fileversion=1.0.0.0
 #AutoIt3Wrapper_Res_ProductName=APM Manager
-#AutoIt3Wrapper_Res_ProductVersion=1.0.0
-#AutoIt3Wrapper_Res_LegalCopyright=Nickets 2026
 #EndRegion
 Global Const $OPT_COORDSRELATIVE = 0
 Global Const $OPT_COORDSABSOLUTE = 1
@@ -7146,7 +7143,7 @@ Func __UDF_GETNEXTGLOBALID ( $HWND )
 	EndIf
 	$NCTRLID = $__G_AUDF_GLOBALIDS_USED [ $IUSEDINDEX ] [ 1 ]
 	$__G_AUDF_GLOBALIDS_USED [ $IUSEDINDEX ] [ 1 ] += 1
-	$__G_AUDF_GLOBALIDS_USED [ $IUSEDINDEX ] [ ( $NCTRLID + 4294957296 ) + $_UDF_GLOBALIDS_OFFSET ] = $NCTRLID
+	$__G_AUDF_GLOBALIDS_USED [ $IUSEDINDEX ] [ ( $NCTRLID - 10000 ) + $_UDF_GLOBALIDS_OFFSET ] = $NCTRLID
 	Return $NCTRLID
 EndFunc
 Func __UDF_FREEGLOBALID ( $HWND , $IGLOBALID )
@@ -15959,18 +15956,23 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
+Global Const $GAPMVERSION = "4.9"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
+Global $GADSAPIKEY = ""
+Global $GADSCACHE = ""
+Global $GADSCACHETIME = 0
+Global $GSUNPIDCACHE = "|"
+Global $GDISTTRIGGERED = "|"
+Global $GDISTQUEUE = ""
+Global $GDISTQUEUERUNNING = False
 Global $GGUIMAIN , $GGUIWIDTH , $GGUIHEIGHT , $GGUIX , $GGUIY
 Global $GBROWSERS [ 0 ] [ 4 ] , $GBROWSERSSORTBY = 0
 Global $GCURRENTPOSITION = 0
 Global $GHOTKEYFWD , $GHOTKEYBCK , $GHOTKEYTOP , $GHOTKEYSRT , $GHOTKEYSRP
 Global $GHOTKEYGRPNEXT , $GHOTKEYGRPBACK
 Global $GAUTOSORTING , $GGUITOOLBAR , $GTOOLBARBUTTONBCK , $GTOOLBARBUTTONFWD , $GTOOLBARBUTTONTOP
-Global $GREMOVESHADOWS = 0 , $CHECKBOXREMOVESHADOWS
-Global $GPAYPASSPATH = "" , $BUTTONPAYPASS , $INPUTPAYPASSPATH , $BUTTONPAYPASSBROWSE , $GPAYPASSRUNNING = False , $GPAYPASSPID = 0
-Global $COMBOMONITOR , $GMONITOROFFSETX = 0 , $GMONITOROFFSETY = 0
 Global $GINJWINOLDX , $GINJWINOLDY , $GINJWINOLDW
 Global $GLISTVIEWCOLORBLINK
 Global $GFOCUSLIST = True
@@ -15983,10 +15985,9 @@ Opt ( "GUIOnEventMode" , 0 )
 Opt ( "GUIResizeMode" , $GUI_DOCKLEFT + $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 Opt ( "WinWaitDelay" , 10 )
 Opt ( "WinTitleMatchMode" , 4 )
-_CHECKFORUPDATE ( )
 _SHOWSPLASHSCREEN ( )
-#Region ### START Koda GUI section ###
-$GGUIMAIN = GUICreate ( "AdsPower Window Manager v1.0" , 358 , 680 , 920 , 180 , BitOR ( $GUI_SS_DEFAULT_GUI , $WS_SIZEBOX , $WS_THICKFRAME ) )
+#Region ### START Koda GUI section ### Form=m:\dropbox\upwork\multilogin browser manager\form1.kxf
+$GGUIMAIN = GUICreate ( "AdsPower Window Manager v" & $GAPMVERSION , 358 , 680 , 920 , 180 , BitOR ( $GUI_SS_DEFAULT_GUI , $WS_SIZEBOX , $WS_THICKFRAME ) )
 $MAIN = GUICtrlCreateTab ( 8 , 8 , 345 , 609 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKLEFT + $GUI_DOCKRIGHT + $GUI_DOCKTOP + $GUI_DOCKBOTTOM )
 $TABSHEET1 = GUICtrlCreateTabItem ( "Main" )
@@ -16028,10 +16029,6 @@ GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 $BUTTONTMTLITE = GUICtrlCreateButton ( "TM Lite" , 284 , 560 , 59 , 25 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 GUICtrlSetBkColor ( - 1 , 43520 )
-GUICtrlSetColor ( - 1 , 16777215 )
-$BUTTONSAVEPOS = GUICtrlCreateButton ( "SAVE" , 284 , 590 , 59 , 22 )
-GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
-GUICtrlSetBkColor ( - 1 , 255 )
 GUICtrlSetColor ( - 1 , 16777215 )
 $BUTTONMOVEBACK = GUICtrlCreateButton ( "<<<" , 24 , 40 , 75 , 25 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
@@ -16131,17 +16128,11 @@ GUICtrlSetTip ( - 1 , "Action Hotkey" )
 $INPUTEHKDESC10 = GUICtrlCreateInput ( "Extra Hotkeys ON/OFF" , 40 , 332 , 161 , 21 , BitOR ( $GUI_SS_DEFAULT_INPUT , $ES_CENTER , $ES_READONLY ) )
 GUICtrlSetTip ( - 1 , "Description" )
 GUICtrlCreateGroup ( "" , - 99 , - 99 , 1 , 1 )
-$GROUP2 = GUICtrlCreateGroup ( " Options " , 24 , 620 , 313 , 131 )
+$GROUP2 = GUICtrlCreateGroup ( " Options " , 24 , 620 , 313 , 85 )
 $CHECKBOXAUTOSORTING = GUICtrlCreateCheckbox ( "Auto column sorting " , 96 , 636 , 153 , 17 )
 $CHECKBOXINJECTCONTROLS = GUICtrlCreateCheckbox ( "Inject controls inside each browser" , 96 , 652 , 201 , 17 )
 $CHECKBOXMINIMIZEOTHERS = GUICtrlCreateCheckbox ( "Minimize others on profile select" , 96 , 668 , 201 , 17 )
 GUICtrlSetState ( $CHECKBOXMINIMIZEOTHERS , $GUI_CHECKED )
-$CHECKBOXREMOVESHADOWS = GUICtrlCreateCheckbox ( "Remove window shadows (save RAM)" , 96 , 684 , 201 , 17 )
-$BUTTONPAYPASS = GUICtrlCreateButton ( "PayPass" , 32 , 704 , 56 , 22 )
-GUICtrlSetBkColor ( $BUTTONPAYPASS , 5025616 )
-$INPUTPAYPASSPATH = GUICtrlCreateInput ( "" , 92 , 704 , 200 , 22 )
-GUICtrlSetState ( $INPUTPAYPASSPATH , $GUI_DISABLE )
-$BUTTONPAYPASSBROWSE = GUICtrlCreateButton ( "..." , 296 , 704 , 30 , 22 )
 GUICtrlCreateGroup ( "" , - 99 , - 99 , 1 , 1 )
 $TABSHEET4 = GUICtrlCreateTabItem ( "Discord" )
 $LABELDISCORD = GUICtrlCreateLabel ( "Send Screenshot to Discord" , 24 , 56 , 300 , 25 )
@@ -16153,7 +16144,7 @@ $INPUTMESSAGE = GUICtrlCreateEdit ( "" , 110 , 124 , 200 , 60 )
 $BUTTONDISCORDQUE = GUICtrlCreateButton ( "Send to QUE" , 24 , 196 , 96 , 35 )
 $BUTTONSENDTOPROD = GUICtrlCreateButton ( "Send to PROD" , 124 , 196 , 96 , 35 )
 $BUTTONSENDVFQUE = GUICtrlCreateButton ( "Send VF Queue" , 224 , 196 , 96 , 35 )
-GUICtrlSetBkColor ( $BUTTONSENDVFQUE , 4915330 )
+GUICtrlSetBkColor ( $BUTTONSENDVFQUE , 0x4B0082 )
 $BUTTONSCREENSHOTPROD = GUICtrlCreateButton ( "PROD Screenshot" , 24 , 238 , 148 , 35 )
 $BUTTONSCREENSHOTSENDPROD = GUICtrlCreateButton ( "Screenshot Send to PROD" , 178 , 238 , 142 , 35 )
 $LABELDISCORDSTATUS = GUICtrlCreateLabel ( "" , 24 , 280 , 296 , 30 )
@@ -16169,45 +16160,6 @@ $LABELSCREENSHOTFOLDER = GUICtrlCreateLabel ( "Save Folder:" , 24 , 435 , 80 , 2
 $INPUTSCREENSHOTFOLDER = GUICtrlCreateInput ( "" , 110 , 435 , 170 , 20 )
 $BUTTONBROWSEFOLDER = GUICtrlCreateButton ( "..." , 285 , 434 , 30 , 22 )
 $BUTTONSAVEDISCORD = GUICtrlCreateButton ( "Save Discord Settings" , 100 , 470 , 150 , 30 )
-$TABSHEET5 = GUICtrlCreateTabItem ( "Positioner" )
-$LABELPOSITIONER = GUICtrlCreateLabel ( "Window Positioner" , 24 , 56 , 300 , 25 )
-GUICtrlSetFont ( - 1 , 10 , 800 )
-$LABELCOLS = GUICtrlCreateLabel ( "Columns:" , 24 , 96 , 60 , 20 )
-$INPUTCOLS = GUICtrlCreateInput ( "4" , 90 , 96 , 50 , 20 )
-$LABELROWS = GUICtrlCreateLabel ( "Rows:" , 160 , 96 , 40 , 20 )
-$INPUTROWS = GUICtrlCreateInput ( "2" , 210 , 96 , 50 , 20 )
-$LABELWIDTH = GUICtrlCreateLabel ( "Width:" , 24 , 130 , 60 , 20 )
-$INPUTWIDTH = GUICtrlCreateInput ( "480" , 90 , 130 , 50 , 20 )
-$LABELHEIGHT = GUICtrlCreateLabel ( "Height:" , 160 , 130 , 50 , 20 )
-$INPUTHEIGHT = GUICtrlCreateInput ( "540" , 210 , 130 , 50 , 20 )
-$LABELGAPX = GUICtrlCreateLabel ( "Gap X:" , 24 , 164 , 60 , 20 )
-$INPUTGAPX = GUICtrlCreateInput ( "0" , 90 , 164 , 50 , 20 )
-$LABELGAPY = GUICtrlCreateLabel ( "Gap Y:" , 160 , 164 , 50 , 20 )
-$INPUTGAPY = GUICtrlCreateInput ( "0" , 210 , 164 , 50 , 20 )
-$BUTTONPOSITION = GUICtrlCreateButton ( "Position Windows" , 24 , 210 , 140 , 40 )
-$LABELURL = GUICtrlCreateLabel ( "URL:" , 24 , 265 , 40 , 20 )
-$INPUTURL = GUICtrlCreateInput ( "https://www.ticketmaster.com" , 70 , 265 , 145 , 20 )
-$BUTTONOPENURL = GUICtrlCreateButton ( "Open URL" , 220 , 260 , 55 , 30 )
-Global $BUTTONSTOPURL = GUICtrlCreateButton ( "STOP" , 280 , 260 , 45 , 30 )
-GUICtrlSetBkColor ( $BUTTONSTOPURL , 16711680 )
-$BUTTONSAVEPOSITIONER = GUICtrlCreateButton ( "Save Positioner Settings" , 80 , 305 , 180 , 30 )
-GUICtrlCreateLabel ( "Groups" , 24 , 345 , 300 , 20 )
-GUICtrlSetFont ( - 1 , 9 , 800 )
-$LABELGROUPSTATUS = GUICtrlCreateLabel ( "" , 24 , 365 , 300 , 18 )
-Global $GROUPBUTTONS [ 26 ]
-Local $IGRPY = 385
-For $IGRP = 0 To 25
-	Local $IGRPROW = Int ( $IGRP / 9 )
-	Local $IGRPCOL = Mod ( $IGRP , 9 )
-	$GROUPBUTTONS [ $IGRP ] = GUICtrlCreateButton ( Chr ( 65 + $IGRP ) , 24 + $IGRPCOL * 34 , $IGRPY + $IGRPROW * 30 , 30 , 26 )
-	GUICtrlSetFont ( - 1 , 8 , 700 )
-Next
-Global $GACTIVEGROUP = - 1
-Global $GLISTVIEWCLICKED = False
-Global $GLASTSELECTEDINDEX = - 1
-Global $GBROWSERMOVEINPROGRESS = False
-Global $GSORTINGINPROGRESS = False
-Global $GSTOPURLLOOP = False
 $TABSHEET3 = GUICtrlCreateTabItem ( "Distribte" )
 Global $LABELDISTRIBTE = GUICtrlCreateLabel ( "Distribte Auto-Login" , 24 , 56 , 300 , 25 )
 GUICtrlSetFont ( - 1 , 10 , 800 )
@@ -16230,8 +16182,47 @@ GUICtrlCreateLabel ( "4. Open any profile - auto logs in!" , 24 , 359 , 300 , 18
 Global $LABELDISTACCOUNT = GUICtrlCreateLabel ( "" , 24 , 395 , 296 , 20 )
 GUICtrlSetFont ( - 1 , 9 , 700 )
 GUICtrlSetColor ( $LABELDISTACCOUNT , 0x4CAF50 )
+$TABSHEET5 = GUICtrlCreateTabItem ( "Positioner" )
+$LABELPOSITIONER = GUICtrlCreateLabel ( "Window Positioner" , 24 , 56 , 300 , 25 )
+GUICtrlSetFont ( - 1 , 10 , 800 )
+$LABELCOLS = GUICtrlCreateLabel ( "Columns:" , 24 , 96 , 60 , 20 )
+$INPUTCOLS = GUICtrlCreateInput ( "4" , 90 , 96 , 50 , 20 )
+$LABELROWS = GUICtrlCreateLabel ( "Rows:" , 160 , 96 , 40 , 20 )
+$INPUTROWS = GUICtrlCreateInput ( "2" , 210 , 96 , 50 , 20 )
+$LABELWIDTH = GUICtrlCreateLabel ( "Width:" , 24 , 130 , 60 , 20 )
+$INPUTWIDTH = GUICtrlCreateInput ( "480" , 90 , 130 , 50 , 20 )
+$LABELHEIGHT = GUICtrlCreateLabel ( "Height:" , 160 , 130 , 50 , 20 )
+$INPUTHEIGHT = GUICtrlCreateInput ( "540" , 210 , 130 , 50 , 20 )
+$LABELGAPX = GUICtrlCreateLabel ( "Gap X:" , 24 , 164 , 60 , 20 )
+$INPUTGAPX = GUICtrlCreateInput ( "0" , 90 , 164 , 50 , 20 )
+$LABELGAPY = GUICtrlCreateLabel ( "Gap Y:" , 160 , 164 , 50 , 20 )
+$INPUTGAPY = GUICtrlCreateInput ( "0" , 210 , 164 , 50 , 20 )
+$BUTTONPOSITION = GUICtrlCreateButton ( "Position Windows" , 24 , 210 , 140 , 40 )
+$LABELURL = GUICtrlCreateLabel ( "URL:" , 24 , 265 , 40 , 20 )
+$INPUTURL = GUICtrlCreateInput ( "https://www.ticketmaster.com" , 70 , 265 , 145 , 20 )
+$BUTTONOPENURL = GUICtrlCreateButton ( "Open URL" , 220 , 260 , 55 , 30 )
+Global $BUTTONSTOPURL = GUICtrlCreateButton ( "STOP" , 280 , 260 , 45 , 30 )
+GUICtrlSetBkColor ( $BUTTONSTOPURL , 0xFF0000 )
+$BUTTONSAVEPOSITIONER = GUICtrlCreateButton ( "Save Positioner Settings" , 80 , 305 , 180 , 30 )
+GUICtrlCreateLabel ( "Groups" , 24 , 345 , 300 , 20 )
+GUICtrlSetFont ( - 1 , 9 , 800 )
+$LABELGROUPSTATUS = GUICtrlCreateLabel ( "" , 24 , 365 , 300 , 18 )
+Global $GROUPBUTTONS [ 26 ]
+Local $IGRPY = 385
+For $IGRP = 0 To 25
+	Local $IGRPROW = Int ( $IGRP / 9 )
+	Local $IGRPCOL = Mod ( $IGRP , 9 )
+	$GROUPBUTTONS [ $IGRP ] = GUICtrlCreateButton ( Chr ( 65 + $IGRP ) , 24 + $IGRPCOL * 34 , $IGRPY + $IGRPROW * 30 , 30 , 26 )
+	GUICtrlSetFont ( - 1 , 8 , 700 )
+Next
+Global $GACTIVEGROUP = - 1
+Global $GLISTVIEWCLICKED = False
+Global $GLASTSELECTEDINDEX = - 1
+Global $GBROWSERMOVEINPROGRESS = False
+Global $GSTOPURLLOOP = False
+Global $GSORTINGINPROGRESS = False
 GUICtrlCreateTabItem ( "" )
-GUICtrlCreateLabel ( "Dev : ChingChing" , 16 , 620 , 120 , 15 )
+GUICtrlCreateLabel ( "APM v" & $GAPMVERSION , 16 , 620 , 120 , 15 )
 GUICtrlSetFont ( - 1 , 7 , 400 , 0 , "Arial" )
 GUICtrlSetColor ( - 1 , 8947848 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
@@ -16240,12 +16231,12 @@ GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 $BUTTONMAINOPENURL = GUICtrlCreateButton ( "Open URL" , 205 , 634 , 55 , 24 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 Global $BUTTONMAINSTOPURL = GUICtrlCreateButton ( "STOP" , 264 , 634 , 45 , 24 )
-GUICtrlSetBkColor ( $BUTTONMAINSTOPURL , 16711680 )
+GUICtrlSetBkColor ( $BUTTONMAINSTOPURL , 0xFF0000 )
 GUICtrlSetResizing ( $BUTTONMAINSTOPURL , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
-$CHECKBOXONTOP = GUICtrlCreateCheckbox ( "On top" , 296 , 660 , 57 , 17 )
-GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
-$CHECKBOXEXTRAHOTKEYS = GUICtrlCreateCheckbox ( "Hotkeys" , 224 , 660 , 65 , 17 )
-GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
+$CHECKBOXONTOP = GUICtrlCreateCheckbox ( "On top" , 296 , 8 , 57 , 17 )
+GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
+$CHECKBOXEXTRAHOTKEYS = GUICtrlCreateCheckbox ( "Hotkeys" , 224 , 8 , 65 , 17 )
+GUICtrlSetResizing ( - 1 , $GUI_DOCKTOP + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 #EndRegion ### END Koda GUI section ###
 Dim $GEXTRAHOTKEYCTRLS [ 9 ] [ 3 ] = [ [ $INPUTEHKDESC1 , $INPUTEHKACTION1 , $INPUTEHKEY1 ] , [ $INPUTEHKDESC2 , $INPUTEHKACTION2 , $INPUTEHKEY2 ] , [ $INPUTEHKDESC3 , $INPUTEHKACTION3 , $INPUTEHKEY3 ] , [ $INPUTEHKDESC4 , $INPUTEHKACTION4 , $INPUTEHKEY4 ] , [ $INPUTEHKDESC5 , $INPUTEHKACTION5 , $INPUTEHKEY5 ] , [ $INPUTEHKDESC6 , $INPUTEHKACTION6 , $INPUTEHKEY6 ] , [ $INPUTEHKDESC7 , $INPUTEHKACTION7 , $INPUTEHKEY7 ] , [ $INPUTEHKDESC8 , $INPUTEHKACTION8 , $INPUTEHKEY8 ] , [ $INPUTEHKDESC9 , $INPUTEHKACTION9 , $INPUTEHKEY9 ] ]
 Global $GDISTEMAIL = ""
@@ -16260,14 +16251,15 @@ GUIRegisterMsg ( $WM_NOTIFY , "WM_NOTIFY" )
 _GUICTRLLISTVIEW_REGISTERSORTCALLBACK ( $LISTVIEW1 , 2 )
 Global $HDLL = DllOpen ( "user32.dll" )
 AdlibRegister ( "_FocusList" , 300 )
-AdlibRegister ( "GetBrowsers" , 2000 )
+AdlibRegister ( "GetBrowsers" , 1000 )
 AdlibRegister ( "ListViewColotBlink" , 1000 )
+AdlibRegister ( "_RefreshAdsCacheTimer" , 30000 )
 OnAutoItExitRegister ( "OnExit" )
 Local $IEXLISTVIEWSTYLE = BitOR ( $LVS_EX_FULLROWSELECT , $LVS_EX_SUBITEMIMAGES , $LVS_EX_GRIDLINES , $LVS_EX_DOUBLEBUFFER )
 _GUICTRLLISTVIEW_SETEXTENDEDLISTVIEWSTYLE ( $LISTVIEW1 , $IEXLISTVIEWSTYLE )
 $HIMAGE = _GUIIMAGELIST_CREATE ( 16 , 16 , 5 )
-_GUIIMAGELIST_ADDICON ( $HIMAGE , $GDIRROOT & "mm.ico" )
-_GUIIMAGELIST_ADDICON ( $HIMAGE , $GDIRROOT & "ff.ico" )
+_GUIIMAGELIST_ADDICON ( $HIMAGE , @ScriptDir & "\apm.ico" )
+_GUIIMAGELIST_ADDICON ( $HIMAGE , @ScriptDir & "\apm.ico" )
 _GUIIMAGELIST_ADD ( $HIMAGE , _GUICTRLLISTVIEW_CREATESOLIDBITMAP ( $LISTVIEW1 , 16777215 , 16 , 16 ) )
 _GUIIMAGELIST_ADD ( $HIMAGE , _GUICTRLLISTVIEW_CREATESOLIDBITMAP ( $LISTVIEW1 , 16776960 , 16 , 16 ) )
 _GUIIMAGELIST_ADD ( $HIMAGE , _GUICTRLLISTVIEW_CREATESOLIDBITMAP ( $LISTVIEW1 , 16711680 , 16 , 16 ) )
@@ -16280,6 +16272,7 @@ If $GALLHOTKEYSON Then
 	HOTKEYSSET ( )
 	HOTKEYS2SET ( )
 EndIf
+_REFRESHADSCACHE ( )
 While 1
 	_SLEEP ( 50 )
 WEnd
@@ -16317,11 +16310,11 @@ Func HOTKEYS2SET ( $SSET = True )
 		$SACTION = $GEXTRAHOTKEYSVALUES [ $I ] [ 1 ]
 		$SHOTKEY = $GEXTRAHOTKEYSVALUES [ $I ] [ 2 ]
 		If $SHOTKEY = "" Then ContinueLoop
+		; Skip bare keys without modifiers (^=Ctrl, +=Shift, !=Alt) - they block normal typing
+		If Not StringInStr ( $SHOTKEY , "^" ) And Not StringInStr ( $SHOTKEY , "+" ) And Not StringInStr ( $SHOTKEY , "!" ) Then ContinueLoop
 		If $SSET Then
-			ConsoleWrite ( "Setting hotkey: " & $SHOTKEY & " / " & $SACTION & @CRLF )
 			HotKeySet ( $SHOTKEY , "HotKeyExtraRun" )
 		Else
-			ConsoleWrite ( "UNsetting hotkey: " & $SHOTKEY & " / " & $SACTION & @CRLF )
 			HotKeySet ( $SHOTKEY )
 		EndIf
 	Next
@@ -16342,140 +16335,223 @@ Func GUISETPOS ( )
 	WinMove ( $GGUIMAIN , "" , $GGUIX , $GGUIY , $GGUIWIDTH , $GGUIHEIGHT )
 EndFunc
 Func _FOCUSLIST ( )
-	If WinGetHandle ( "[ACTIVE]" ) <> $GGUIMAIN And Not _ISPRESSED ( "01" , $HDLL ) And Not _ISPRESSED ( "02" , $HDLL ) Then
-		ControlFocus ( $GGUIMAIN , "" , GUICtrlGetHandle ( $LISTVIEW1 ) )
-	Else
+	If WinGetHandle ( "[ACTIVE]" ) = $GGUIMAIN Then
+		; Only auto-focus ListView on the Main tab (tab 0) - don't steal focus from input fields on other tabs
+		If GUICtrlRead ( $MAIN ) = 0 Then
+			If Not _ISPRESSED ( "01" , $HDLL ) And Not _ISPRESSED ( "02" , $HDLL ) Then
+				ControlFocus ( $GGUIMAIN , "" , GUICtrlGetHandle ( $LISTVIEW1 ) )
+			EndIf
+		EndIf
 		$GFOCUSLIST = True
 	EndIf
 EndFunc
+Func _ADSCOMERR ( )
+EndFunc
 Func GETCHROMECOMMANDLINE ( $PID )
-	$OWMI = ObjGet ( "winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2" )
+	Local $OERR = ObjEvent ( "AutoIt.Error" , "_ADSCOMERR" )
+	Local $OWMI = ObjGet ( "winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2" )
+	If Not IsObj ( $OWMI ) Then Return ""
 	Local $COLPROCESSES = $OWMI .ExecQuery ( "SELECT CommandLine FROM Win32_Process WHERE ProcessId=" & $PID )
 	For $OBJPROCESS In $COLPROCESSES
 		Return $OBJPROCESS .CommandLine
 	Next
 	Return ""
 EndFunc
-Func REMOVEBROWSERSHADOWS ( )
-	If Not $GREMOVESHADOWS Then Return
-	Local $ALIST = _GETADSPOWERBROWSERS ( )
-	For $I = 1 To $ALIST [ 0 ] [ 0 ]
-		_WINAPI_DWMSETWINDOWATTRIBUTE ( $ALIST [ $I ] [ 1 ] , 2 , 1 )
-	Next
+Func _ISSUNBROWSERPID ( $IPID )
+	If StringInStr ( $GSUNPIDCACHE , "|Y" & $IPID & "|" ) Then Return True
+	If StringInStr ( $GSUNPIDCACHE , "|N" & $IPID & "|" ) Then Return False
+	Local $HPROC = DllCall ( "kernel32.dll" , "handle" , "OpenProcess" , "dword" , 1040 , "bool" , False , "dword" , $IPID )
+	If @error Or $HPROC [ 0 ] = 0 Then
+		$GSUNPIDCACHE &= "N" & $IPID & "|"
+		Return False
+	EndIf
+	Local $SPATH = DllStructCreate ( "wchar[1024]" )
+	Local $ISIZE = DllStructCreate ( "dword" )
+	DllStructSetData ( $ISIZE , 1 , 1024 )
+	Local $ARET = DllCall ( "kernel32.dll" , "bool" , "QueryFullProcessImageNameW" , "handle" , $HPROC [ 0 ] , "dword" , 0 , "struct*" , $SPATH , "struct*" , $ISIZE )
+	DllCall ( "kernel32.dll" , "bool" , "CloseHandle" , "handle" , $HPROC [ 0 ] )
+	If @error Or $ARET [ 0 ] = 0 Then
+		$GSUNPIDCACHE &= "N" & $IPID & "|"
+		Return False
+	EndIf
+	Local $SEXEPATH = DllStructGetData ( $SPATH , 1 )
+	If StringInStr ( $SEXEPATH , "SunBrowser" ) Then
+		$GSUNPIDCACHE &= "Y" & $IPID & "|"
+		Return True
+	EndIf
+	$GSUNPIDCACHE &= "N" & $IPID & "|"
+	Return False
 EndFunc
-Func _GETSUNBROWSERPIDS ( )
-	Local Static $SCACHEDPIDS [ 1 ] = [ 0 ]
-	Local Static $SCACHETIME = 0
-	Local Static $SFIRSTRUN = True
-	If Not $SFIRSTRUN And TimerDiff ( $SCACHETIME ) < 5000 And $SCACHEDPIDS [ 0 ] > 0 Then Return $SCACHEDPIDS
-	$SFIRSTRUN = False
-	Local $APIDS [ 1 ] = [ 0 ]
-	Local $OWMI = ObjGet ( "winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2" )
-	If Not IsObj ( $OWMI ) Then Return $APIDS
-	Local $COLPROCS = $OWMI .ExecQuery ( "SELECT ProcessId FROM Win32_Process WHERE CommandLine LIKE '%SunBrowser%' AND NOT CommandLine LIKE '%--type=%'" )
-	For $OPROC In $COLPROCS
-		$APIDS [ 0 ] += 1
-		ReDim $APIDS [ $APIDS [ 0 ] + 1 ]
-		$APIDS [ $APIDS [ 0 ] ] = $OPROC .ProcessId
-	Next
-	$SCACHEDPIDS = $APIDS
-	$SCACHETIME = TimerInit ( )
-	Return $APIDS
+Func _GETADSPOWERUSERID ( $HWND )
+	Local $IPID = WinGetProcess ( $HWND )
+	Local $SCMD = GETCHROMECOMMANDLINE ( $IPID )
+	If $SCMD = "" Then Return ""
+	Local $ARESULT = StringRegExp ( $SCMD , "user-data-dir=""?[^""]*[/\\]([a-z0-9]+)[/\\]?""?" , 1 )
+	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
+	Return ""
 EndFunc
-Func _GETADSPOWERBROWSERS ( )
-	Local $APIDS = _GETSUNBROWSERPIDS ( )
-	Local $ARESULT [ 1 ] [ 2 ] = [ [ 0 , 0 ] ]
-	If $APIDS [ 0 ] = 0 Then Return $ARESULT
-	Local $ALIST = WinList ( "[CLASS:Chrome_WidgetWin_1]" )
-	For $I = 1 To $ALIST [ 0 ] [ 0 ]
-		If $ALIST [ $I ] [ 0 ] = "" Then ContinueLoop
-		If Not BitAND ( WinGetState ( $ALIST [ $I ] [ 1 ] ) , 2 ) Then ContinueLoop
-		Local $IPID = WinGetProcess ( $ALIST [ $I ] [ 1 ] )
-		For $J = 1 To $APIDS [ 0 ]
-			If $IPID = $APIDS [ $J ] Then
-				$ARESULT [ 0 ] [ 0 ] += 1
-				ReDim $ARESULT [ $ARESULT [ 0 ] [ 0 ] + 1 ] [ 2 ]
-				$ARESULT [ $ARESULT [ 0 ] [ 0 ] ] [ 0 ] = $ALIST [ $I ] [ 0 ]
-				$ARESULT [ $ARESULT [ 0 ] [ 0 ] ] [ 1 ] = $ALIST [ $I ] [ 1 ]
-				ExitLoop
+Func _ADSFETCHPAGE ( $IPAGE , $SAPIKEY )
+	Local $OERR = ObjEvent ( "AutoIt.Error" , "_ADSCOMERR" )
+	Local $AHOSTS [ 2 ] = [ "127.0.0.1" , "local.adspower.net" ]
+	For $H = 0 To 1
+		Local $SURL = "http://" & $AHOSTS [ $H ] & ":50325/api/v1/user/list?page=" & $IPAGE & "&page_size=100"
+		If $SAPIKEY <> "" Then $SURL &= "&api_key=" & $SAPIKEY
+		Local $BDATA = InetRead ( $SURL , 1 )
+		If @error = 0 And BinaryLen ( $BDATA ) > 10 Then
+			Local $SRESP = BinaryToString ( $BDATA )
+			If StringInStr ( $SRESP , """code"":0" ) Then Return $SRESP
+		EndIf
+	Next
+	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
+	If Not IsObj ( $OHTTP ) Then Return ""
+	For $H = 0 To 1
+		Local $SURL2 = "http://" & $AHOSTS [ $H ] & ":50325/api/v1/user/list?page=" & $IPAGE & "&page_size=100"
+		If $SAPIKEY <> "" Then $SURL2 &= "&api_key=" & $SAPIKEY
+		$OHTTP .Open ( "GET" , $SURL2 , False )
+		$OHTTP .SetTimeouts ( 3000 , 3000 , 3000 , 5000 )
+		$OHTTP .Send ( )
+		If $OHTTP .Status = 200 Then
+			Local $SRESP2 = $OHTTP .ResponseText
+			If StringInStr ( $SRESP2 , """code"":0" ) Then Return $SRESP2
+		EndIf
+	Next
+	Return ""
+EndFunc
+Func _REFRESHADSCACHETIMER ( )
+	_REFRESHADSCACHE ( )
+EndFunc
+Func _REFRESHADSCACHE ( )
+	Local $OERR = ObjEvent ( "AutoIt.Error" , "_ADSCOMERR" )
+	If $GADSCACHETIME > 0 And TimerDiff ( $GADSCACHETIME ) < 30000 Then Return
+	Local $SNEWCACHE = ""
+	Local $SWORKINGKEY = ""
+	Local $SRESP = _ADSFETCHPAGE ( 1 , "" )
+	If $SRESP = "" And $GADSAPIKEY <> "" Then
+		$SRESP = _ADSFETCHPAGE ( 1 , $GADSAPIKEY )
+		If $SRESP <> "" Then $SWORKINGKEY = $GADSAPIKEY
+	EndIf
+	If $SRESP = "" Then Return
+	$SNEWCACHE &= $SRESP
+	Local $ATOTAL = StringRegExp ( $SRESP , """count""\s*:\s*(\d+)" , 1 )
+	If Not @error Then
+		Local $ITOTAL = Number ( $ATOTAL [ 0 ] )
+		Local $IPAGES = Ceiling ( $ITOTAL / 100 )
+		If $IPAGES > 1 Then
+			For $IP = 2 To $IPAGES
+				Sleep ( 1000 )
+				Local $SPAGE = _ADSFETCHPAGE ( $IP , $SWORKINGKEY )
+				If $SPAGE <> "" Then $SNEWCACHE &= $SPAGE
+			Next
+		EndIf
+	EndIf
+	$GADSCACHE = $SNEWCACHE
+	$GADSCACHETIME = TimerInit ( )
+EndFunc
+Func _GETADSPOWERCUSTOMNO ( $SUSERID )
+	If $SUSERID = "" Or $GADSCACHE = "" Then Return ""
+	Local $AUIDKEYS [ 2 ] = [ "user_id" , "userid" ]
+	Local $ASNKEYS [ 2 ] = [ "serial_number" , "serialnumber" ]
+	For $U = 0 To 1
+		For $S = 0 To 1
+			Local $ABLOCK = StringRegExp ( $GADSCACHE , """" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """[^}]*""" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)" , 1 )
+			If Not @error Then
+				Local $SRESULT = $ABLOCK [ 0 ]
+				If $SRESULT <> "" And $SRESULT <> "null" And $SRESULT <> "0" Then Return $SRESULT
+			EndIf
+			Local $ABLOCK2 = StringRegExp ( $GADSCACHE , """" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)""[^}]*""" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """" , 1 )
+			If Not @error Then
+				Local $SRESULT2 = $ABLOCK2 [ 0 ]
+				If $SRESULT2 <> "" And $SRESULT2 <> "null" And $SRESULT2 <> "0" Then Return $SRESULT2
 			EndIf
 		Next
 	Next
-	Return $ARESULT
-EndFunc
-Func _GETPROFILEFROMCMD ( $HWND )
-	Local $IPID = WinGetProcess ( $HWND )
-	Local $SCMD = GETCHROMECOMMANDLINE ( $IPID )
-	Local $ARESULT
-	$ARESULT = StringRegExp ( $SCMD , "--(?:load-profile|profile)[-_]name=""?([^""]+)""?" , 1 )
-	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
-	$ARESULT = StringRegExp ( $SCMD , "--session_name=""?([^""\s]+)""?" , 1 )
-	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
-	$ARESULT = StringRegExp ( $SCMD , "user-data-dir=""?[^""]*[/\\]([a-z0-9]+)[/\\]?""?" , 1 )
-	If Not @error Then Return StringStripWS ( $ARESULT [ 0 ] , 3 )
 	Return ""
 EndFunc
 Func GETBROWSERS ( )
 	$SNEEDSSORT = False
-	Local $ALISTFF = _GETADSPOWERBROWSERS ( )
-	For $I = 1 To $ALISTFF [ 0 ] [ 0 ]
-		$STITLE = $ALISTFF [ $I ] [ 0 ]
-		$SHANDLE = $ALISTFF [ $I ] [ 1 ]
+	Local $ALISTALL = WinList ( "[CLASS:Chrome_WidgetWin_1]" )
+	If Not IsArray ( $ALISTALL ) Then Return
+	Local $ITOTALWINS = $ALISTALL [ 0 ] [ 0 ]
+	Local $ASUNHANDLES [ $ITOTALWINS + 1 ]
+	Local $ASUNTITLES [ $ITOTALWINS + 1 ]
+	Local $ISUNCOUNT = 0
+	For $W = 1 To $ITOTALWINS
+		If $ALISTALL [ $W ] [ 0 ] = "" Then ContinueLoop
+		If Not BitAND ( WinGetState ( $ALISTALL [ $W ] [ 1 ] ) , 2 ) Then ContinueLoop
+		Local $WPID = WinGetProcess ( $ALISTALL [ $W ] [ 1 ] )
+		If _ISSUNBROWSERPID ( $WPID ) Then
+			$ISUNCOUNT += 1
+			$ASUNTITLES [ $ISUNCOUNT ] = $ALISTALL [ $W ] [ 0 ]
+			$ASUNHANDLES [ $ISUNCOUNT ] = $ALISTALL [ $W ] [ 1 ]
+		EndIf
+	Next
+	For $I = 1 To $ISUNCOUNT
+		$STITLE = $ASUNTITLES [ $I ]
+		$SHANDLE = $ASUNHANDLES [ $I ]
 		$SBROWSERICON = 0
 		$STAB = $STITLE
-		$SSPLIT = StringSplit ( $STAB , "|" )
-		Local $STABTIME
-		If Not @error And $SSPLIT [ 0 ] > 2 Then
-			$SRAWTIME = StringStripWS ( $SSPLIT [ 2 ] , 3 )
-			$STABTIME = Number ( StringLeft ( $SRAWTIME , StringInStr ( $SRAWTIME , ":" ) - 1 ) ) * 60 + Number ( StringMid ( $SRAWTIME , StringInStr ( $SRAWTIME , ":" ) + 1 ) )
-		EndIf
 		If $STAB = "" Then $STAB = "New Tab"
-		If $ALISTFF [ $I ] [ 0 ] <> "" And BitAND ( WinGetState ( $SHANDLE ) , 2 ) Then
-			$SSEARCH = _ARRAYSEARCH ( $GBROWSERS , $SHANDLE , 0 , 0 , 0 , 0 , 0 , 0 )
-			If $SSEARCH = - 1 Then
-				$SPROFILE = _GETPROFILEFROMCMD ( $SHANDLE )
-				If $SPROFILE = "" Then
-					$SPROFILE = $STITLE
+		$SSEARCH = _ARRAYSEARCH ( $GBROWSERS , $SHANDLE , 0 , 0 , 0 , 0 , 0 , 0 )
+		If $SSEARCH = - 1 Then
+			$SPROFILE = ""
+			Local $SUSERID = _GETADSPOWERUSERID ( $SHANDLE )
+			If $SUSERID <> "" Then
+				Local $SCUSTOMNO = _GETADSPOWERCUSTOMNO ( $SUSERID )
+				If $SCUSTOMNO <> "" Then
+					$SPROFILE = $SCUSTOMNO
+				Else
+					$SPROFILE = $SUSERID
 				EndIf
-				$SINDEX = _GUICTRLLISTVIEW_ADDITEM ( $LISTVIEW1 , $SPROFILE , $SBROWSERICON )
-				_GUICTRLLISTVIEW_ADDSUBITEM ( $LISTVIEW1 , $SINDEX , $STAB , 1 )
-				_GUICTRLLISTVIEW_ADDSUBITEM ( $LISTVIEW1 , $SINDEX , $SHANDLE , 2 )
-				Dim $SADD [ 1 ] [ 4 ] = [ [ $SHANDLE , $STITLE , $SPROFILE , $STAB ] ]
-				_ARRAYADD ( $GBROWSERS , $SADD )
+			EndIf
+			If $SPROFILE = "" Then
+				Local $IPID = WinGetProcess ( $SHANDLE )
+				$SCOMMANDLINE = GETCHROMECOMMANDLINE ( $IPID )
+				If $SCOMMANDLINE <> "" Then
+					Local $SPATTERN = "--session_name=""([^""]+)"""
+					Local $ARESULT = StringRegExp ( $SCOMMANDLINE , $SPATTERN , 1 )
+					If Not @error Then
+						$SPROFILE = StringStripWS ( $ARESULT [ 0 ] , 3 )
+					Else
+						$SPATTERN = "--session_name=([^\s]+)"
+						$ARESULT = StringRegExp ( $SCOMMANDLINE , $SPATTERN , 1 )
+						If Not @error Then
+							$SPROFILE = StringStripWS ( $ARESULT [ 0 ] , 3 )
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+			$SINDEX = _GUICTRLLISTVIEW_ADDITEM ( $LISTVIEW1 , $SPROFILE , $SBROWSERICON )
+			_GUICTRLLISTVIEW_ADDSUBITEM ( $LISTVIEW1 , $SINDEX , $STAB , 1 )
+			_GUICTRLLISTVIEW_ADDSUBITEM ( $LISTVIEW1 , $SINDEX , $SHANDLE , 2 )
+			Dim $SADD [ 1 ] [ 4 ] = [ [ $SHANDLE , $STITLE , $SPROFILE , $STAB ] ]
+			_ARRAYADD ( $GBROWSERS , $SADD )
+			$SNEEDSSORT = True
+			If $GDISTLOGGEDIN And Not StringInStr ( $GDISTTRIGGERED , "|" & $SHANDLE & "|" ) Then
+				$GDISTTRIGGERED &= $SHANDLE & "|"
+				_DISTRIBTETRIGGER ( $SHANDLE )
+			EndIf
+		Else
+			If $STAB <> $GBROWSERS [ $SSEARCH ] [ 3 ] Then
+				$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $SHANDLE )
+				_GUICTRLLISTVIEW_SETITEMTEXT ( $LISTVIEW1 , $II , $STAB , 1 )
+				$GBROWSERS [ $SSEARCH ] [ 3 ] = $STAB
 				$SNEEDSSORT = True
-				If $GREMOVESHADOWS Then _WINAPI_DWMSETWINDOWATTRIBUTE ( $SHANDLE , 2 , 1 )
-				ConsoleWrite ( "Browser added" & @CRLF )
-			Else
-				If $STAB <> $GBROWSERS [ $SSEARCH ] [ 3 ] Then
-					$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $SHANDLE )
-					_GUICTRLLISTVIEW_SETITEMTEXT ( $LISTVIEW1 , $II , $STAB , 1 )
-					$GBROWSERS [ $SSEARCH ] [ 3 ] = $STAB
-					$SNEEDSSORT = True
-					If $STABTIME = 0 Then
-						$SBGCOLOR = $SBROWSERICON
-					ElseIf $STABTIME < 31 Then
-						$SBGCOLOR = 4
-					ElseIf $STABTIME < 61 Then
-						$SBGCOLOR = 3
-					Else
-						$SBGCOLOR = $SBROWSERICON
-					EndIf
-					If $GLISTVIEWCOLORBLINK = 1 Then
-						_GUICTRLLISTVIEW_SETITEMIMAGE ( $LISTVIEW1 , $II , $SBGCOLOR )
-					Else
-						_GUICTRLLISTVIEW_SETITEMIMAGE ( $LISTVIEW1 , $II , $SBROWSERICON )
-					EndIf
-				EndIf
 			EndIf
 		EndIf
 	Next
 	For $I = UBound ( $GBROWSERS ) - 1 To 0 Step - 1
-		If _ARRAYSEARCH ( $ALISTFF , $GBROWSERS [ $I ] [ 0 ] , 1 , 0 , 0 , 0 , 1 , 1 ) = - 1 Then
+		Local $BFOUND = False
+		For $J = 1 To $ISUNCOUNT
+			If $ASUNHANDLES [ $J ] = $GBROWSERS [ $I ] [ 0 ] Then
+				$BFOUND = True
+				ExitLoop
+			EndIf
+		Next
+		If Not $BFOUND Then
 			$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $GBROWSERS [ $I ] [ 0 ] )
 			_GUICTRLLISTVIEW_DELETEITEM ( $LISTVIEW1 , $II )
 			_ARRAYDELETE ( $GBROWSERS , $I )
 			$SNEEDSSORT = True
-			ConsoleWrite ( "Browser closed" & @CRLF )
 		EndIf
 	Next
 	If $SNEEDSSORT Then
@@ -16588,13 +16664,20 @@ Func GUICHECKCONTROLS ( )
 	Local $NMSGGUI = GUIGetMsg ( )
 	Switch $NMSGGUI
 	Case $GUI_EVENT_CLOSE
+		; Save window position only on close - hotkeys are saved on Save button click
+		Local $APOS = WinGetPos ( $GGUIMAIN )
+		If Not @error Then
+			IniWrite ( $GCFGINI , "MAIN" , "GUIW" , $APOS [ 2 ] )
+			IniWrite ( $GCFGINI , "MAIN" , "GUIH" , $APOS [ 3 ] )
+			IniWrite ( $GCFGINI , "MAIN" , "GUIX" , $APOS [ 0 ] )
+			IniWrite ( $GCFGINI , "MAIN" , "GUIY" , $APOS [ 1 ] )
+		EndIf
 		AdlibUnRegister ( "GETBROWSERS" )
 		AdlibUnRegister ( "LISTVIEWCOLOTBLINK" )
 		AdlibUnRegister ( "_FocusList" )
 		AdlibUnRegister ( "BrowserInjectControls" )
 		DllClose ( $HDLL )
 		_GUICTRLLISTVIEW_UNREGISTERSORTCALLBACK ( $LISTVIEW1 )
-		CONFIGSAVE ( )
 		GUIDelete ( $GGUIMAIN )
 		Exit
 	Case $LISTVIEW1
@@ -16664,45 +16747,15 @@ Func GUICHECKCONTROLS ( )
 			AdlibUnRegister ( "BrowserInjectControls" )
 			BROWSERTOOLBARHIDE ( )
 		EndIf
-	Case $CHECKBOXREMOVESHADOWS
-		If _ISCHECKED ( $CHECKBOXREMOVESHADOWS ) Then
-			IniWrite ( $GCFGINI , "MAIN" , "RemoveShadows" , 1 )
-			$GREMOVESHADOWS = 1
-			REMOVEBROWSERSHADOWS ( )
-		Else
-			IniWrite ( $GCFGINI , "MAIN" , "RemoveShadows" , 0 )
-			$GREMOVESHADOWS = 0
-		EndIf
-	Case $BUTTONPAYPASS
-		If $GPAYPASSRUNNING Then
-			If $GPAYPASSPID > 0 And ProcessExists ( $GPAYPASSPID ) Then
-				ProcessClose ( $GPAYPASSPID )
-			EndIf
-			$GPAYPASSRUNNING = False
-			$GPAYPASSPID = 0
-			GUICtrlSetData ( $BUTTONPAYPASS , "PayPass" )
-			GUICtrlSetBkColor ( $BUTTONPAYPASS , 5025616 )
-		Else
-			If $GPAYPASSPATH <> "" And FileExists ( $GPAYPASSPATH ) Then
-				$GPAYPASSPID = Run ( """" & $GPAYPASSPATH & """" , StringRegExpReplace ( $GPAYPASSPATH , "\\[^\\]*$" , "" ) )
-				If $GPAYPASSPID > 0 Then
-					$GPAYPASSRUNNING = True
-					GUICtrlSetData ( $BUTTONPAYPASS , "PP ON" )
-					GUICtrlSetBkColor ( $BUTTONPAYPASS , 16729156 )
-				EndIf
-			Else
-				MsgBox ( 48 , "PayPass" , "PayPass.exe not set. Click ... to browse for PayPass.exe" )
-			EndIf
-		EndIf
-	Case $BUTTONPAYPASSBROWSE
-		Local $SFILE = FileOpenDialog ( "Select PayPass.exe" , @ScriptDir , "Executable (*.exe)" , 1 )
-		If Not @error Then
-			$GPAYPASSPATH = $SFILE
-			GUICtrlSetData ( $INPUTPAYPASSPATH , $SFILE )
-			IniWrite ( $GCFGINI , "MAIN" , "PayPassPath" , $SFILE )
-		EndIf
 	Case $BUTTONSAVEHOTKEYS
 		CONFIGSAVE ( )
+		HOTKEYSSET ( False )
+		HOTKEYSSET ( )
+		HOTKEYS2SET ( False )
+		HOTKEYS2SET ( )
+		GUICtrlSetData ( $BUTTONSAVEHOTKEYS , "Saved!" )
+		Sleep ( 500 )
+		GUICtrlSetData ( $BUTTONSAVEHOTKEYS , "Save" )
 		CONFIGLOAD ( )
 		If $GALLHOTKEYSON Then
 			HOTKEYSSET ( False )
@@ -16714,6 +16767,8 @@ Func GUICHECKCONTROLS ( )
 		SENDDISCORDSCREENSHOT ( "que" )
 	Case $BUTTONSENDTOPROD
 		SENDDISCORDSCREENSHOT ( "prod" )
+	Case $BUTTONSENDVFQUE
+		SENDDISCORDSCREENSHOT ( "vf" )
 	Case $BUTTONSCREENSHOTPROD
 		SAVESCREENSHOTONLY ( "prod" )
 	Case $BUTTONSCREENSHOTSENDPROD
@@ -16746,15 +16801,8 @@ Func GUICHECKCONTROLS ( )
 		OPENURLALLMAIN ( )
 	Case $BUTTONMAINSTOPURL
 		$GSTOPURLLOOP = True
-	Case $BUTTONSENDVFQUE
-		SENDDISCORDSCREENSHOT ( "vf" )
 	Case $BUTTONTMTLITE
 		TMLITEALL ( )
-	Case $BUTTONSAVEPOS
-		CONFIGSAVE ( )
-		ToolTip ( "Position saved!" , Default , Default , "APM" , 1 )
-		Sleep ( 1500 )
-		ToolTip ( "" )
 Case Else
 		Local $BMAINGROUPCLICKED = False
 		For $IMG = 0 To 25
@@ -16988,28 +17036,13 @@ Func CONFIGLOAD ( )
 	If $GGUIX < - 50 Or $GGUIX > @DesktopWidth - 50 Then $GGUIX = 1
 	If $GGUIY < - 50 Or $GGUIY > @DesktopHeight - 50 Then $GGUIY = @DesktopHeight - ( $GGUIHEIGHT + 35 )
 	$GBROWSERSSORTBY = IniRead ( $GCFGINI , "MAIN" , "SortColumn" , 0 )
-	Local $STMP
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "FORWARD" , "CTRL+SHIFT+RIGHT" )
-	If $STMP = "0" Or $STMP = "" Then $STMP = "CTRL+SHIFT+RIGHT"
-	$GHOTKEYFWD = HOTKEYPARSE ( $STMP )
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "BACKWARD" , "CTRL+SHIFT+LEFT" )
-	If $STMP = "0" Or $STMP = "" Then $STMP = "CTRL+SHIFT+LEFT"
-	$GHOTKEYBCK = HOTKEYPARSE ( $STMP )
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "TOP" , "CTRL+SHIFT+UP" )
-	If $STMP = "0" Or $STMP = "" Then $STMP = "CTRL+SHIFT+UP"
-	$GHOTKEYTOP = HOTKEYPARSE ( $STMP )
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "SORTTAB" , "CTRL+SHIFT+T" )
-	If $STMP = "0" Or $STMP = "" Then $STMP = "CTRL+SHIFT+T"
-	$GHOTKEYSRT = HOTKEYPARSE ( $STMP )
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "SORTPROFILE" , "CTRL+SHIFT+P" )
-	If $STMP = "0" Or $STMP = "" Then $STMP = "CTRL+SHIFT+P"
-	$GHOTKEYSRP = HOTKEYPARSE ( $STMP )
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "GROUPNEXT" , "" )
-	If $STMP = "0" Then $STMP = ""
-	$GHOTKEYGRPNEXT = HOTKEYPARSE ( $STMP )
-	$STMP = IniRead ( $GCFGINI , "HOTKEYS" , "GROUPBACK" , "" )
-	If $STMP = "0" Then $STMP = ""
-	$GHOTKEYGRPBACK = HOTKEYPARSE ( $STMP )
+	$GHOTKEYFWD = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "FORWARD" , "CTRL+SHIFT+RIGHT" ) ) )
+	$GHOTKEYBCK = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "BACKWARD" , "CTRL+SHIFT+LEFT" ) ) )
+	$GHOTKEYTOP = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "TOP" , "CTRL+SHIFT+UP" ) ) )
+	$GHOTKEYSRT = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "SORTTAB" , "CTRL+SHIFT+T" ) ) )
+	$GHOTKEYSRP = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "SORTPROFILE" , "CTRL+SHIFT+P" ) ) )
+	$GHOTKEYGRPNEXT = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "GROUPNEXT" , "" ) ) )
+	$GHOTKEYGRPBACK = HOTKEYPARSE ( _HKLOADVAL ( IniRead ( $GCFGINI , "HOTKEYS" , "GROUPBACK" , "" ) ) )
 	GUICtrlSetData ( $INPUTHOTKEYFWD , $GHOTKEYFWD [ 1 ] )
 	GUICtrlSetData ( $INPUTHOTKEYBCK , $GHOTKEYBCK [ 1 ] )
 	GUICtrlSetData ( $INPUTHOTKEYTOP , $GHOTKEYTOP [ 1 ] )
@@ -17023,15 +17056,9 @@ Func CONFIGLOAD ( )
 		AdlibRegister ( "BrowserInjectControls" , 100 )
 	EndIf
 	If $GAUTOSORTING Then GUICtrlSetState ( $CHECKBOXAUTOSORTING , $GUI_CHECKED )
-	$GREMOVESHADOWS = Number ( IniRead ( $GCFGINI , "MAIN" , "RemoveShadows" , 0 ) )
-	If $GREMOVESHADOWS Then GUICtrlSetState ( $CHECKBOXREMOVESHADOWS , $GUI_CHECKED )
-	$GPAYPASSPATH = IniRead ( $GCFGINI , "MAIN" , "PayPassPath" , "" )
-	If $GPAYPASSPATH <> "" Then GUICtrlSetData ( $INPUTPAYPASSPATH , $GPAYPASSPATH )
 	For $I = 0 To UBound ( $GEXTRAHOTKEYCTRLS ) - 1
 		For $Z = 0 To UBound ( $GEXTRAHOTKEYCTRLS , 2 ) - 1
-			Local $SEHKREAD = IniRead ( $GCFGINI , "HOTKEYS2" , "EHK" & $I + 1 & "-" & $Z , "" )
-			If $SEHKREAD = "0" Then $SEHKREAD = ""
-			$SREAD = HOTKEYPARSE ( $SEHKREAD )
+			$SREAD = HOTKEYPARSE ( IniRead ( $GCFGINI , "HOTKEYS2" , "EHK" & $I + 1 & "-" & $Z , "" ) )
 			$GEXTRAHOTKEYSVALUES [ $I ] [ $Z ] = $SREAD [ 0 ]
 			GUICtrlSetData ( $GEXTRAHOTKEYCTRLS [ $I ] [ $Z ] , $SREAD [ 1 ] )
 		Next
@@ -17045,6 +17072,7 @@ Func CONFIGLOAD ( )
 	$SPREP = HOTKEYPARSE ( $GHOTKEYONOFF )
 	HotKeySet ( $SPREP [ 0 ] , "HotKeysToggleExtra" )
 	GUICtrlSetData ( $INPUTMAINURL , IniRead ( $GCFGINI , "MAIN" , "MainURL" , "https://www.ticketmaster.com" ) )
+	$GADSAPIKEY = IniRead ( $GCFGINI , "ADSPOWER" , "ApiKey" , "" )
 EndFunc
 Func HOTKEYPARSE ( $SDATA )
 	$SRAW = $SDATA
@@ -17062,6 +17090,14 @@ Func HOTKEYPARSE ( $SDATA )
 	Dim $SRET [ 2 ] = [ $SDATA , $SRAW ]
 	Return $SRET
 EndFunc
+Func _HKSAVEVAL ( $S )
+	If $S = "" Or $S = "0" Then Return "NONE"
+	Return $S
+EndFunc
+Func _HKLOADVAL ( $S )
+	If $S = "NONE" Then Return ""
+	Return $S
+EndFunc
 Func CONFIGSAVE ( )
 	Local $APOS = WinGetPos ( $GGUIMAIN )
 	If Not @error Then
@@ -17070,68 +17106,22 @@ Func CONFIGSAVE ( )
 		IniWrite ( $GCFGINI , "MAIN" , "GUIX" , $APOS [ 0 ] )
 		IniWrite ( $GCFGINI , "MAIN" , "GUIY" , $APOS [ 1 ] )
 	EndIf
-	Local $SHKSAVE
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYFWD )
-	If $SHKSAVE <> "0" And $SHKSAVE <> "" Then IniWrite ( $GCFGINI , "HOTKEYS" , "FORWARD" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYBCK )
-	If $SHKSAVE <> "0" And $SHKSAVE <> "" Then IniWrite ( $GCFGINI , "HOTKEYS" , "BACKWARD" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYTOP )
-	If $SHKSAVE <> "0" And $SHKSAVE <> "" Then IniWrite ( $GCFGINI , "HOTKEYS" , "TOP" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYSRT )
-	If $SHKSAVE <> "0" And $SHKSAVE <> "" Then IniWrite ( $GCFGINI , "HOTKEYS" , "SORTTAB" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYSRP )
-	If $SHKSAVE <> "0" And $SHKSAVE <> "" Then IniWrite ( $GCFGINI , "HOTKEYS" , "SORTPROFILE" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYGRPNEXT )
-	If $SHKSAVE <> "0" Then IniWrite ( $GCFGINI , "HOTKEYS" , "GROUPNEXT" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTHOTKEYGRPBACK )
-	If $SHKSAVE <> "0" Then IniWrite ( $GCFGINI , "HOTKEYS" , "GROUPBACK" , $SHKSAVE )
-	$SHKSAVE = GUICtrlRead ( $INPUTEHKEY10 )
-	If $SHKSAVE <> "0" And $SHKSAVE <> "" Then IniWrite ( $GCFGINI , "MAIN" , "HotkeysToggleExtra" , $SHKSAVE )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "FORWARD" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYFWD ) ) )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "BACKWARD" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYBCK ) ) )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "TOP" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYTOP ) ) )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "SORTTAB" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYSRT ) ) )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "SORTPROFILE" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYSRP ) ) )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "GROUPNEXT" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYGRPNEXT ) ) )
+	IniWrite ( $GCFGINI , "HOTKEYS" , "GROUPBACK" , _HKSAVEVAL ( GUICtrlRead ( $INPUTHOTKEYGRPBACK ) ) )
+	IniWrite ( $GCFGINI , "MAIN" , "HotkeysToggleExtra" , _HKSAVEVAL ( GUICtrlRead ( $INPUTEHKEY10 ) ) )
 	For $I = 0 To UBound ( $GEXTRAHOTKEYCTRLS ) - 1
 		For $Z = 0 To UBound ( $GEXTRAHOTKEYCTRLS , 2 ) - 1
-			Local $SEHKVAL = GUICtrlRead ( $GEXTRAHOTKEYCTRLS [ $I ] [ $Z ] )
-			If $SEHKVAL <> "0" Then
-				$SREAD = HOTKEYPARSE ( $SEHKVAL )
-				$GEXTRAHOTKEYSVALUES [ $I ] [ $Z ] = $SREAD [ 0 ]
-				IniWrite ( $GCFGINI , "HOTKEYS2" , "EHK" & $I + 1 & "-" & $Z , $SREAD [ 1 ] )
-			EndIf
+			$SREAD = HOTKEYPARSE ( GUICtrlRead ( $GEXTRAHOTKEYCTRLS [ $I ] [ $Z ] ) )
+			$GEXTRAHOTKEYSVALUES [ $I ] [ $Z ] = $SREAD [ 0 ]
+			IniWrite ( $GCFGINI , "HOTKEYS2" , "EHK" & $I + 1 & "-" & $Z , $SREAD [ 1 ] )
 		Next
 	Next
 	IniWrite ( $GCFGINI , "MAIN" , "MainURL" , GUICtrlRead ( $INPUTMAINURL ) )
-EndFunc
-Func POPULATEMONITORS ( )
-	Local $AMONITORS = _WINAPI_ENUMDISPLAYMONITORS ( )
-	If @error Or Not IsArray ( $AMONITORS ) Then
-		GUICtrlSetData ( $COMBOMONITOR , "1" , "1" )
-		Return
-	EndIf
-	Local $SLIST = ""
-	For $I = 1 To $AMONITORS [ 0 ] [ 0 ]
-		If $SLIST <> "" Then $SLIST &= "|"
-		$SLIST &= $I
-	Next
-	GUICtrlSetData ( $COMBOMONITOR , $SLIST , "1" )
-	Local $SSAVED = IniRead ( $GCFGINI , "MAIN" , "Monitor" , "1" )
-	If $SSAVED <> "" Then GUICtrlSetData ( $COMBOMONITOR , $SSAVED )
-	UPDATEMONITOROFFSET ( )
-EndFunc
-Func UPDATEMONITOROFFSET ( )
-	Local $IMON = Int ( GUICtrlRead ( $COMBOMONITOR ) )
-	If $IMON < 1 Then $IMON = 1
-	Local $AMONITORS = _WINAPI_ENUMDISPLAYMONITORS ( )
-	If @error Or Not IsArray ( $AMONITORS ) Or $IMON > $AMONITORS [ 0 ] [ 0 ] Then
-		$GMONITOROFFSETX = 0
-		$GMONITOROFFSETY = 0
-		Return
-	EndIf
-	Local $AINFO = _WINAPI_GETMONITORINFO ( $AMONITORS [ $IMON ] [ 0 ] )
-	If Not @error And IsArray ( $AINFO ) Then
-		$GMONITOROFFSETX = DllStructGetData ( $AINFO [ 1 ] , "Left" )
-		$GMONITOROFFSETY = DllStructGetData ( $AINFO [ 1 ] , "Top" )
-	Else
-		$GMONITOROFFSETX = 0
-		$GMONITOROFFSETY = 0
-	EndIf
 EndFunc
 Func ONEXIT ( )
 	AdlibUnRegister ( "GETBROWSERS" )
@@ -17140,7 +17130,6 @@ Func ONEXIT ( )
 	AdlibUnRegister ( "BrowserInjectControls" )
 	DllClose ( $HDLL )
 	_GUICTRLLISTVIEW_UNREGISTERSORTCALLBACK ( $LISTVIEW1 )
-	CONFIGSAVE ( )
 EndFunc
 Func _ISCHECKED ( $IDCONTROLID )
 	Return BitAND ( GUICtrlRead ( $IDCONTROLID ) , $GUI_CHECKED ) = $GUI_CHECKED
@@ -17201,7 +17190,7 @@ Func SENDDISCORDSCREENSHOT ( $SCHANNEL )
 		$APROFILES [ $I ] [ 1 ] = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 1 )
 	Next
 	Local $SPROFILENAME = GUICtrlRead ( $INPUTPROFILENAME )
-	If $SPROFILENAME = "" Then $SPROFILENAME = "APM Manager"
+	If $SPROFILENAME = "" Then $SPROFILENAME = "MLM Manager"
 	Local $IMAXPERIMAGE = 9999
 	Local $ICHUNKS = Ceiling ( $ICOUNT / $IMAXPERIMAGE )
 	Local $AFILES [ $ICHUNKS ]
@@ -17216,7 +17205,7 @@ Func SENDDISCORDSCREENSHOT ( $SCHANNEL )
 			$ACHUNK [ $J ] [ 0 ] = $APROFILES [ $ISTART + $J ] [ 0 ]
 			$ACHUNK [ $J ] [ 1 ] = $APROFILES [ $ISTART + $J ] [ 1 ]
 		Next
-		$AFILES [ $ICHUNK ] = @TempDir & "\apm_profiles_" & @HOUR & @MIN & @SEC & "_" & $ICHUNK & ".png"
+		$AFILES [ $ICHUNK ] = @TempDir & "\mlm_profiles_" & @HOUR & @MIN & @SEC & "_" & $ICHUNK & ".png"
 		Local $BIMGOK = _GENERATEPROFILEIMAGE ( $ACHUNK , $ICHUNKSIZE , $AFILES [ $ICHUNK ] )
 		If Not $BIMGOK Then
 			GUICtrlSetData ( $LABELDISCORDSTATUS , "Error: Could not generate image " & $ICHUNK + 1 )
@@ -17306,7 +17295,7 @@ Func SAVESCREENSHOTONLY ( $SCHANNEL )
 			$ACHUNK [ $J ] [ 0 ] = $APROFILES [ $ISTART + $J ] [ 0 ]
 			$ACHUNK [ $J ] [ 1 ] = $APROFILES [ $ISTART + $J ] [ 1 ]
 		Next
-		$AFILES [ $ICHUNK ] = @TempDir & "\apm_profiles_" & @HOUR & @MIN & @SEC & "_" & $ICHUNK & ".png"
+		$AFILES [ $ICHUNK ] = @TempDir & "\mlm_profiles_" & @HOUR & @MIN & @SEC & "_" & $ICHUNK & ".png"
 		Local $BIMGOK = _GENERATEPROFILEIMAGE ( $ACHUNK , $ICHUNKSIZE , $AFILES [ $ICHUNK ] )
 		If Not $BIMGOK Then
 			GUICtrlSetData ( $LABELDISCORDSTATUS , "Error: Could not generate image" )
@@ -17377,7 +17366,7 @@ Func SENDPRODTODISCORD ( )
 		$AFILES [ $I ] = $ATEMPFILES [ $I ]
 	Next
 	Local $SPROFILENAME = GUICtrlRead ( $INPUTPROFILENAME )
-	If $SPROFILENAME = "" Then $SPROFILENAME = "APM Manager"
+	If $SPROFILENAME = "" Then $SPROFILENAME = "MLM Manager"
 	Local $SMESSAGE = GUICtrlRead ( $INPUTMESSAGE )
 	GUICtrlSetData ( $LABELDISCORDSTATUS , "Sending " & $IFILECOUNT & " screenshots to Discord..." )
 	Local $IBATCHSIZE = 10
@@ -17555,7 +17544,7 @@ Func SENDDISCORDTEXTONLY ( $SCHANNEL )
 		Return
 	EndIf
 	Local $SPROFILENAME = GUICtrlRead ( $INPUTPROFILENAME )
-	If $SPROFILENAME = "" Then $SPROFILENAME = "APM Manager"
+	If $SPROFILENAME = "" Then $SPROFILENAME = "MLM Manager"
 	GUICtrlSetData ( $LABELDISCORDSTATUS , "Sending text to " & $SCHANNEL & "..." )
 	Local $SBODY = "{""content"":""" & StringReplace ( StringReplace ( $SMESSAGE , "\" , "\\" ) , """" , "\""" ) & """,""username"":""" & StringReplace ( $SPROFILENAME , """" , "\""" ) & """}"
 	If StringInStr ( $SWEBHOOK , "?" ) Then
@@ -17597,7 +17586,7 @@ Func SENDDISCORDTEXTONLY ( $SCHANNEL )
 		GUICtrlSetData ( $LABELDISCORDSTATUS , "Error sending to Discord. Status: " & $ISTATUS )
 	EndIf
 EndFunc
-Func _DISCORDWEBHOOKUPLOAD ( $SWEBHOOKURL , $SFILEPATH , $SCONTENT , $SUSERNAME = "APM Manager" )
+Func _DISCORDWEBHOOKUPLOAD ( $SWEBHOOKURL , $SFILEPATH , $SCONTENT , $SUSERNAME = "MLM Manager" )
 	Local $HFILE = FileOpen ( $SFILEPATH , 16 )
 	If $HFILE = - 1 Then Return False
 	Local $BFILEDATA = FileRead ( $HFILE )
@@ -17651,7 +17640,7 @@ Func _DISCORDWEBHOOKUPLOAD ( $SWEBHOOKURL , $SFILEPATH , $SCONTENT , $SUSERNAME 
 	Local $ISTATUS = $OHTTP .Status
 	Return ( $ISTATUS = 200 Or $ISTATUS = 204 )
 EndFunc
-Func _DISCORDWEBHOOKUPLOADMULTI ( $SWEBHOOKURL , ByRef $AFILES , $IFILECOUNT , $SCONTENT , $SUSERNAME = "APM Manager" )
+Func _DISCORDWEBHOOKUPLOADMULTI ( $SWEBHOOKURL , ByRef $AFILES , $IFILECOUNT , $SCONTENT , $SUSERNAME = "MLM Manager" )
 	Local $SBOUNDARY = "----AutoItBoundary" & Random ( 100000 , 999999 , 1 )
 	Local $STEXTPART = ""
 	$STEXTPART &= "--" & $SBOUNDARY & @CRLF
@@ -17759,7 +17748,6 @@ Func _LOGTOGOOGLESHEETS ( $SSHEETURL , $SVANAME , ByRef $APROFILES , $ICOUNT , $
 	$SROWS &= "]"
 	Local $SSHEETTAB = "PRODUCTION"
 	If StringLower ( $SCHANNEL ) = "que" Then $SSHEETTAB = "QUEUE"
-	If StringLower ( $SCHANNEL ) = "vf" Then $SSHEETTAB = "VF-QUEUE"
 	Local $SJSON = "{""sheet"":""" & $SSHEETTAB & """,""rows"":" & $SROWS & "}"
 	Local $OHTTP = ObjCreate ( "MSXML2.ServerXMLHTTP.6.0" )
 	If Not IsObj ( $OHTTP ) Then
@@ -17986,6 +17974,7 @@ Func SWITCHGROUP ( $IGROUPINDEX )
 			EndIf
 		EndIf
 	Next
+	Sleep ( 100 )
 	Local $IIDX = 0
 	For $I = $ISTART To $IEND
 		Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
@@ -17996,6 +17985,7 @@ Func SWITCHGROUP ( $IGROUPINDEX )
 			Local $IX = $ICOL * ( $IWIDTH + $IGAPX )
 			Local $IY = $IROW * ( $IHEIGHT + $IGAPY )
 			DllCall ( "user32.dll" , "bool" , "ShowWindow" , "hwnd" , $HWND , "int" , 1 )
+			Sleep ( 50 )
 			DllCall ( "user32.dll" , "bool" , "SetWindowPos" , "hwnd" , $HWND , "hwnd" , 0 , "int" , $IX , "int" , $IY , "int" , $IWIDTH , "int" , $IHEIGHT , "uint" , 64 )
 		EndIf
 		$IIDX += 1
@@ -18067,6 +18057,7 @@ Func SWITCHGROUPMAIN ( $IGROUPINDEX )
 			EndIf
 		EndIf
 	Next
+	Sleep ( 100 )
 	Local $IIDX = 0
 	For $I = $ISTART To $IEND
 		Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
@@ -18077,6 +18068,7 @@ Func SWITCHGROUPMAIN ( $IGROUPINDEX )
 			Local $IX = $ICOL * ( $IWIDTH + $IGAPX )
 			Local $IY = $IROW * ( $IHEIGHT + $IGAPY )
 			DllCall ( "user32.dll" , "bool" , "ShowWindow" , "hwnd" , $HWND , "int" , 1 )
+			Sleep ( 50 )
 			DllCall ( "user32.dll" , "bool" , "SetWindowPos" , "hwnd" , $HWND , "hwnd" , 0 , "int" , $IX , "int" , $IY , "int" , $IWIDTH , "int" , $IHEIGHT , "uint" , 64 )
 		EndIf
 		$IIDX += 1
@@ -18148,7 +18140,96 @@ Func LOADPOSITIONERSETTINGS ( )
 	GUICtrlSetData ( $INPUTGAPY , IniRead ( $GCFGINI , "POSITIONER" , "GapY" , "0" ) )
 	GUICtrlSetData ( $INPUTURL , IniRead ( $GCFGINI , "POSITIONER" , "URL" , "https://www.ticketmaster.com" ) )
 EndFunc
+Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
+	Local $HDC = _WINAPI_GETDC ( 0 )
+	Local $HMEMDC = _WINAPI_CREATECOMPATIBLEDC ( $HDC )
+	Local $HBITMAP = _WINAPI_CREATECOMPATIBLEBITMAP ( $HDC , $IWIDTH , $IHEIGHT )
+	Local $HOLD = _WINAPI_SELECTOBJECT ( $HMEMDC , $HBITMAP )
+	_WINAPI_BITBLT ( $HMEMDC , 0 , 0 , $IWIDTH , $IHEIGHT , $HDC , 0 , 0 , 13369376 )
+	_WINAPI_SELECTOBJECT ( $HMEMDC , $HOLD )
+	_WINAPI_DELETEDC ( $HMEMDC )
+	_WINAPI_RELEASEDC ( 0 , $HDC )
+	Return $HBITMAP
+EndFunc
+Func _SHOWSPLASHSCREEN ( )
+	Local $SSPLASHPATH = @ScriptDir & "\APManagerData\splash.bmp"
+	If Not FileExists ( $SSPLASHPATH ) Then $SSPLASHPATH = @ScriptDir & "\APManagerData\splash.jpg"
+	If Not FileExists ( $SSPLASHPATH ) Then $SSPLASHPATH = @ScriptDir & "\APManagerData\splash.png"
+	If Not FileExists ( $SSPLASHPATH ) Then Return
+	Local $ISIZE = 200
+	Local $IX = ( @DesktopWidth - $ISIZE ) / 2
+	Local $IY = ( @DesktopHeight - $ISIZE ) / 2
+	Local $HSPLASH = GUICreate ( "APM Splash" , $ISIZE , $ISIZE , $IX , $IY , 2147483648 , 524288 )
+	GUISetBkColor ( 0 , $HSPLASH )
+	Local $IDPIC = GUICtrlCreatePic ( "" , 0 , 0 , $ISIZE , $ISIZE )
+	GUICtrlSetImage ( $IDPIC , $SSPLASHPATH )
+	Local $HREGION = DllCall ( "gdi32.dll" , "handle" , "CreateEllipticRgn" , "int" , 0 , "int" , 0 , "int" , $ISIZE , "int" , $ISIZE )
+	If Not @error And $HREGION [ 0 ] <> 0 Then
+		DllCall ( "user32.dll" , "int" , "SetWindowRgn" , "hwnd" , $HSPLASH , "handle" , $HREGION [ 0 ] , "bool" , True )
+	EndIf
+	For $I = 0 To 255 Step 15
+		WinSetTrans ( $HSPLASH , "" , $I )
+		If $I = 0 Then GUISetState ( @SW_SHOWNOACTIVATE , $HSPLASH )
+		Sleep ( 20 )
+	Next
+	Sleep ( 1000 )
+	For $I = 255 To 0 Step - 15
+		WinSetTrans ( $HSPLASH , "" , $I )
+		Sleep ( 20 )
+	Next
+	GUIDelete ( $HSPLASH )
+EndFunc
 ; ==================== DISTRIBTE FUNCTIONS ====================
+
+Func _DISTRIBTETRIGGER ( $HWND )
+	; Queue the browser window for Distribte auto-login trigger
+	; Store handle with countdown (5 ticks = 5 seconds since AdlibRegister runs every 1000ms)
+	$GDISTQUEUE &= $HWND & ":5|"
+	If Not $GDISTQUEUERUNNING Then
+		$GDISTQUEUERUNNING = True
+		AdlibRegister ( "_DISTRIBTEPROCESSQUEUE" , 1000 )
+	EndIf
+EndFunc
+
+Func _DISTRIBTEPROCESSQUEUE ( )
+	If $GDISTQUEUE = "" Then
+		AdlibUnRegister ( "_DISTRIBTEPROCESSQUEUE" )
+		$GDISTQUEUERUNNING = False
+		Return
+	EndIf
+	; Process items - decrement countdown each tick, trigger at 0
+	Local $AENTRIES = StringSplit ( $GDISTQUEUE , "|" , 2 )
+	Local $SREMAINING = ""
+	For $I = 0 To UBound ( $AENTRIES ) - 1
+		If $AENTRIES [ $I ] = "" Then ContinueLoop
+		Local $APARTS = StringSplit ( $AENTRIES [ $I ] , ":" , 2 )
+		If UBound ( $APARTS ) < 2 Then ContinueLoop
+		Local $SHWND = $APARTS [ 0 ]
+		Local $ICOUNT = Number ( $APARTS [ 1 ] )
+		$ICOUNT -= 1
+		If $ICOUNT > 0 Then
+			; Not ready yet - keep in queue with decremented countdown
+			$SREMAINING &= $SHWND & ":" & $ICOUNT & "|"
+			ContinueLoop
+		EndIf
+		; Countdown reached 0 - open new tab with start.adspower.net to trigger wake-bg.js
+		Local $HWND = HWnd ( $SHWND )
+		If WinExists ( $HWND ) Then
+			WinActivate ( $HWND )
+			WinWaitActive ( $HWND , "" , 2 )
+			; Open new tab and navigate to start.adspower.net
+			Send ( "^t" )
+			Sleep ( 500 )
+			Send ( "start.adspower.net{ENTER}" )
+			Sleep ( 200 )
+		EndIf
+	Next
+	$GDISTQUEUE = $SREMAINING
+	If $GDISTQUEUE = "" Then
+		AdlibUnRegister ( "_DISTRIBTEPROCESSQUEUE" )
+		$GDISTQUEUERUNNING = False
+	EndIf
+EndFunc
 
 Func LOADDISTRIBUTESETTINGS ( )
 	Local $SEMAIL = IniRead ( $GCFGINI , "DISTRIBTE" , "Email" , "" )
@@ -18166,7 +18247,6 @@ Func LOADDISTRIBUTESETTINGS ( )
 EndFunc
 
 Func DISTRIBTEFINDCONFIGS ( )
-	; Pure AutoIt recursive search - NO CMD window at all
 	Local $ARESULTS [ 100 ]
 	Local $ICOUNT = 0
 	Local $APATHS [ 16 ]
@@ -18203,10 +18283,8 @@ EndFunc
 
 Func _DISTRIBTESEARCHDIR ( $SDIR , ByRef $ARESULTS , ByRef $ICOUNT )
 	If $ICOUNT >= 100 Then Return
-	; Check if target file exists in this directory
 	Local $STARGET = $SDIR & "\autologin-config.js"
 	If FileExists ( $STARGET ) Then
-		; Check for duplicate
 		Local $BDUP = False
 		For $K = 0 To $ICOUNT - 1
 			If $ARESULTS [ $K ] = $STARGET Then
@@ -18219,13 +18297,12 @@ Func _DISTRIBTESEARCHDIR ( $SDIR , ByRef $ARESULTS , ByRef $ICOUNT )
 			$ICOUNT += 1
 		EndIf
 	EndIf
-	; Recurse into subdirectories (max depth handled by AutoIt stack)
 	Local $HSEARCH = FileFindFirstFile ( $SDIR & "\*" )
 	If $HSEARCH = -1 Then Return
 	While 1
 		Local $SFOUND = FileFindNextFile ( $HSEARCH )
 		If @error Then ExitLoop
-		If @extended = 0 Then ContinueLoop ; Not a folder, skip
+		If @extended = 0 Then ContinueLoop
 		If $SFOUND = "." Or $SFOUND = ".." Then ContinueLoop
 		_DISTRIBTESEARCHDIR ( $SDIR & "\" & $SFOUND , $ARESULTS , $ICOUNT )
 	WEnd
@@ -18257,7 +18334,6 @@ Func DISTRIBTELOGIN ( )
 	EndIf
 	GUICtrlSetData ( $LABELDISTSTATUS , "Searching for Distribte configs..." )
 	GUICtrlSetColor ( $LABELDISTSTATUS , 0x333333 )
-	; Find all autologin-config.js files in AdsPower directories
 	Local $AFILES = DISTRIBTEFINDCONFIGS ( )
 	Local $IUPDATED = 0
 	If IsArray ( $AFILES ) Then
@@ -18293,132 +18369,3 @@ Func DISTRIBTELOGOUT ( )
 	IniDelete ( $GCFGINI , "DISTRIBTE" )
 EndFunc
 ; ==================== END DISTRIBTE FUNCTIONS ====================
-
-Func _SCREENCAPTURE_CAPTUREEX ( $IWIDTH , $IHEIGHT )
-	Local $HDC = _WINAPI_GETDC ( 0 )
-	Local $HMEMDC = _WINAPI_CREATECOMPATIBLEDC ( $HDC )
-	Local $HBITMAP = _WINAPI_CREATECOMPATIBLEBITMAP ( $HDC , $IWIDTH , $IHEIGHT )
-	Local $HOLD = _WINAPI_SELECTOBJECT ( $HMEMDC , $HBITMAP )
-	_WINAPI_BITBLT ( $HMEMDC , 0 , 0 , $IWIDTH , $IHEIGHT , $HDC , 0 , 0 , 13369376 )
-	_WINAPI_SELECTOBJECT ( $HMEMDC , $HOLD )
-	_WINAPI_DELETEDC ( $HMEMDC )
-	_WINAPI_RELEASEDC ( 0 , $HDC )
-	Return $HBITMAP
-EndFunc
-Func _CHECKFORUPDATE ( )
-	Local Const $SVERSION = "2.5"
-	Local Const $SREPO = "bisalog365-commits/apm-manager"
-	Local Const $SAPI = "https://api.github.com/repos/" & $SREPO & "/releases/latest"
-	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
-	If Not IsObj ( $OHTTP ) Then Return
-	$OHTTP .Open ( "GET" , $SAPI , False )
-	$OHTTP .SetRequestHeader ( "User-Agent" , "APM-Manager" )
-	$OHTTP .Send ( )
-	If $OHTTP .Status <> 200 Then Return
-	Local $SJSON = $OHTTP .ResponseText
-	Local $AVERTAG = StringRegExp ( $SJSON , """tag_name""\s*:\s*""v?([^""]+)""" , 1 )
-	If @error Then Return
-	Local $SREMOTE = $AVERTAG [ 0 ]
-	If $SREMOTE = $SVERSION Then Return
-	Local $ALOCAL = StringSplit ( $SVERSION , "." )
-	Local $AREMOTE2 = StringSplit ( $SREMOTE , "." )
-	Local $BNEWER = False
-	For $I = 1 To 3
-		Local $IL = 0
-		Local $IR = 0
-		If $I <= $ALOCAL [ 0 ] Then $IL = Int ( $ALOCAL [ $I ] )
-		If $I <= $AREMOTE2 [ 0 ] Then $IR = Int ( $AREMOTE2 [ $I ] )
-		If $IR > $IL Then
-			$BNEWER = True
-			ExitLoop
-		ElseIf $IR < $IL Then
-			ExitLoop
-		EndIf
-	Next
-	If Not $BNEWER Then Return
-	Local $AURL = StringRegExp ( $SJSON , """browser_download_url""\s*:\s*""([^""]*APM\.exe[^""]*)""" , 1 )
-	If @error Then Return
-	Local $SDOWNURL = $AURL [ 0 ]
-	Local $IASK = MsgBox ( 36 , "APM Update Available" , "New version " & $SREMOTE & " is available (you have " & $SVERSION & ")." & @CRLF & @CRLF & "Download and install update?" )
-	If $IASK <> 6 Then Return
-	Local $STMP = @TempDir & "\APM_update.exe"
-	; Use a fresh WinHTTP object for download (follows redirects properly)
-	Local $ODLHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
-	If Not IsObj ( $ODLHTTP ) Then
-		MsgBox ( 16 , "Update Failed" , "Could not create download object." )
-		Return
-	EndIf
-	$ODLHTTP .Open ( "GET" , $SDOWNURL , False )
-	$ODLHTTP .SetRequestHeader ( "User-Agent" , "APM-Manager" )
-	$ODLHTTP .Send ( )
-	; Follow redirects - check if we got actual binary (not HTML)
-	If $ODLHTTP .Status <> 200 Then
-		MsgBox ( 16 , "Update Failed" , "Download failed with status " & $ODLHTTP .Status & ". Try again later." )
-		Return
-	EndIf
-	Local $IRESPSIZE = LenB ( $ODLHTTP .ResponseBody )
-	If $IRESPSIZE < 100000 Then
-		; Too small to be an EXE - probably got HTML error page
-		MsgBox ( 16 , "Update Failed" , "Downloaded file is too small (" & $IRESPSIZE & " bytes). Try again later." )
-		Return
-	EndIf
-	Local $OSTREAM = ObjCreate ( "ADODB.Stream" )
-	$OSTREAM .Open ( )
-	$OSTREAM .Type = 1
-	$OSTREAM .Write ( $ODLHTTP .ResponseBody )
-	$OSTREAM .SaveToFile ( $STMP , 2 )
-	$OSTREAM .Close ( )
-	; Verify file was saved
-	If Not FileExists ( $STMP ) Or FileGetSize ( $STMP ) < 100000 Then
-		MsgBox ( 16 , "Update Failed" , "Could not save update file." )
-		Return
-	EndIf
-	Local $SBAT = @TempDir & "\apm_update.bat"
-	Local $SEXE = @ScriptFullPath
-	FileDelete ( $SBAT )
-	; Wait longer (4 sec), retry copy 3 times in case EXE is still locked
-	FileWrite ( $SBAT , "@echo off" & @CRLF & _
-		"timeout /t 4 /nobreak >nul" & @CRLF & _
-		"copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & _
-		"if errorlevel 1 (" & @CRLF & _
-		"  timeout /t 2 /nobreak >nul" & @CRLF & _
-		"  copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & _
-		")" & @CRLF & _
-		"if errorlevel 1 (" & @CRLF & _
-		"  timeout /t 3 /nobreak >nul" & @CRLF & _
-		"  copy /Y """ & $STMP & """ """ & $SEXE & """" & @CRLF & _
-		")" & @CRLF & _
-		"start """" """ & $SEXE & """" & @CRLF & _
-		"del """ & $STMP & """" & @CRLF & _
-		"del ""%~f0""" & @CRLF )
-	Run ( $SBAT , "" , @SW_HIDE )
-	Exit
-EndFunc
-Func _SHOWSPLASHSCREEN ( )
-	Local $SSPLASHPATH = @ScriptDir & "\APManagerData\splash.bmp"
-	If Not FileExists ( $SSPLASHPATH ) Then $SSPLASHPATH = @ScriptDir & "\APManagerData\splash.jpg"
-	If Not FileExists ( $SSPLASHPATH ) Then $SSPLASHPATH = @ScriptDir & "\APManagerData\splash.png"
-	If Not FileExists ( $SSPLASHPATH ) Then Return
-	Local $ISIZE = 200
-	Local $IX = ( @DesktopWidth - $ISIZE ) / 2
-	Local $IY = ( @DesktopHeight - $ISIZE ) / 2
-	Local $HSPLASH = GUICreate ( "APM Splash" , $ISIZE , $ISIZE , $IX , $IY , 2147483648 , 524288 )
-	GUISetBkColor ( 0 , $HSPLASH )
-	Local $IDPIC = GUICtrlCreatePic ( "" , 0 , 0 , $ISIZE , $ISIZE )
-	GUICtrlSetImage ( $IDPIC , $SSPLASHPATH )
-	Local $HREGION = DllCall ( "gdi32.dll" , "handle" , "CreateEllipticRgn" , "int" , 0 , "int" , 0 , "int" , $ISIZE , "int" , $ISIZE )
-	If Not @error And $HREGION [ 0 ] <> 0 Then
-		DllCall ( "user32.dll" , "int" , "SetWindowRgn" , "hwnd" , $HSPLASH , "handle" , $HREGION [ 0 ] , "bool" , True )
-	EndIf
-	For $I = 0 To 255 Step 15
-		WinSetTrans ( $HSPLASH , "" , $I )
-		If $I = 0 Then GUISetState ( @SW_SHOWNOACTIVATE , $HSPLASH )
-		Sleep ( 20 )
-	Next
-	Sleep ( 1000 )
-	For $I = 255 To 0 Step - 15
-		WinSetTrans ( $HSPLASH , "" , $I )
-		Sleep ( 20 )
-	Next
-	GUIDelete ( $HSPLASH )
-EndFunc
