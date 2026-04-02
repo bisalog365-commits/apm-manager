@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.1"
+Global Const $GAPMVERSION = "5.2"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16336,10 +16336,14 @@ Func GUISETPOS ( )
 EndFunc
 Func _FOCUSLIST ( )
 	If WinGetHandle ( "[ACTIVE]" ) = $GGUIMAIN Then
-		; Only auto-focus ListView on the Main tab (tab 0) - don't steal focus from input fields on other tabs
+		; Only auto-focus ListView on the Main tab (tab 0) - don't steal focus from input fields
 		If GUICtrlRead ( $MAIN ) = 0 Then
 			If Not _ISPRESSED ( "01" , $HDLL ) And Not _ISPRESSED ( "02" , $HDLL ) Then
-				ControlFocus ( $GGUIMAIN , "" , GUICtrlGetHandle ( $LISTVIEW1 ) )
+				; Check if user is typing in an input field - don't steal focus
+				Local $SFOCUSED = ControlGetFocus ( $GGUIMAIN )
+				If Not StringInStr ( $SFOCUSED , "Edit" ) And Not StringInStr ( $SFOCUSED , "ComboBox" ) Then
+					ControlFocus ( $GGUIMAIN , "" , GUICtrlGetHandle ( $LISTVIEW1 ) )
+				EndIf
 			EndIf
 		EndIf
 		$GFOCUSLIST = True
