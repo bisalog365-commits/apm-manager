@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.2"
+Global Const $GAPMVERSION = "5.3"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16452,22 +16452,65 @@ Func _REFRESHADSCACHE ( )
 	$GADSCACHETIME = TimerInit ( )
 EndFunc
 Func _GETADSPOWERCUSTOMNO ( $SUSERID )
-	If $SUSERID = "" Or $GADSCACHE = "" Then Return ""
+	If $SUSERID = "" Then Return ""
+	; First try the cache
+	If $GADSCACHE <> "" Then
+		Local $SRESULT = _SEARCHCACHEFORSERIAL ( $GADSCACHE , $SUSERID )
+		If $SRESULT <> "" Then Return $SRESULT
+	EndIf
+	; Cache miss - try direct API query for this specific profile
+	Local $SDIRECT = _ADSFETCHDIRECT ( $SUSERID )
+	If $SDIRECT <> "" Then
+		Local $SRESULT2 = _SEARCHCACHEFORSERIAL ( $SDIRECT , $SUSERID )
+		If $SRESULT2 <> "" Then Return $SRESULT2
+	EndIf
+	Return ""
+EndFunc
+Func _SEARCHCACHEFORSERIAL ( $SDATA , $SUSERID )
 	Local $AUIDKEYS [ 2 ] = [ "user_id" , "userid" ]
 	Local $ASNKEYS [ 4 ] = [ "serial_number" , "serialnumber" , "name" , "remark" ]
 	For $U = 0 To 1
 		For $S = 0 To 3
-			Local $ABLOCK = StringRegExp ( $GADSCACHE , """" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """[^}]*""" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)" , 1 )
+			Local $ABLOCK = StringRegExp ( $SDATA , """" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """[^}]*""" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)" , 1 )
 			If Not @error Then
 				Local $SRESULT = $ABLOCK [ 0 ]
 				If $SRESULT <> "" And $SRESULT <> "null" And $SRESULT <> "0" Then Return $SRESULT
 			EndIf
-			Local $ABLOCK2 = StringRegExp ( $GADSCACHE , """" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)""[^}]*""" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """" , 1 )
+			Local $ABLOCK2 = StringRegExp ( $SDATA , """" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)""[^}]*""" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """" , 1 )
 			If Not @error Then
 				Local $SRESULT2 = $ABLOCK2 [ 0 ]
 				If $SRESULT2 <> "" And $SRESULT2 <> "null" And $SRESULT2 <> "0" Then Return $SRESULT2
 			EndIf
 		Next
+	Next
+	Return ""
+EndFunc
+Func _ADSFETCHDIRECT ( $SUSERID )
+	Local $OERR = ObjEvent ( "AutoIt.Error" , "_ADSCOMERR" )
+	Local $AHOSTS [ 2 ] = [ "127.0.0.1" , "local.adspower.net" ]
+	; Try direct user_id query
+	For $H = 0 To 1
+		Local $SURL = "http://" & $AHOSTS [ $H ] & ":50325/api/v1/user/list?user_id=" & $SUSERID
+		If $GADSAPIKEY <> "" Then $SURL &= "&api_key=" & $GADSAPIKEY
+		Local $BDATA = InetRead ( $SURL , 1 )
+		If @error = 0 And BinaryLen ( $BDATA ) > 10 Then
+			Local $SRESP = BinaryToString ( $BDATA )
+			If StringInStr ( $SRESP , """code"":0" ) Then Return $SRESP
+		EndIf
+	Next
+	; Fallback to WinHttp
+	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
+	If Not IsObj ( $OHTTP ) Then Return ""
+	For $H = 0 To 1
+		Local $SURL2 = "http://" & $AHOSTS [ $H ] & ":50325/api/v1/user/list?user_id=" & $SUSERID
+		If $GADSAPIKEY <> "" Then $SURL2 &= "&api_key=" & $GADSAPIKEY
+		$OHTTP .Open ( "GET" , $SURL2 , False )
+		$OHTTP .SetTimeouts ( 3000 , 3000 , 3000 , 5000 )
+		$OHTTP .Send ( )
+		If $OHTTP .Status = 200 Then
+			Local $SRESP2 = $OHTTP .ResponseText
+			If StringInStr ( $SRESP2 , """code"":0" ) Then Return $SRESP2
+		EndIf
 	Next
 	Return ""
 EndFunc
