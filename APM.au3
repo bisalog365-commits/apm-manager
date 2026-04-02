@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "4.9"
+Global Const $GAPMVERSION = "5.0"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16450,9 +16450,9 @@ EndFunc
 Func _GETADSPOWERCUSTOMNO ( $SUSERID )
 	If $SUSERID = "" Or $GADSCACHE = "" Then Return ""
 	Local $AUIDKEYS [ 2 ] = [ "user_id" , "userid" ]
-	Local $ASNKEYS [ 2 ] = [ "serial_number" , "serialnumber" ]
+	Local $ASNKEYS [ 4 ] = [ "serial_number" , "serialnumber" , "name" , "remark" ]
 	For $U = 0 To 1
-		For $S = 0 To 1
+		For $S = 0 To 3
 			Local $ABLOCK = StringRegExp ( $GADSCACHE , """" & $AUIDKEYS [ $U ] & """\s*:\s*""" & $SUSERID & """[^}]*""" & $ASNKEYS [ $S ] & """\s*:\s*""([^""]*)" , 1 )
 			If Not @error Then
 				Local $SRESULT = $ABLOCK [ 0 ]
@@ -17862,6 +17862,8 @@ Func OPENURLALL ( )
 				Sleep ( 150 )
 				Send ( "^t" )
 				Sleep ( 300 )
+				Send ( "^l" )
+				Sleep ( 200 )
 				Send ( "^v" )
 				Sleep ( 150 )
 				Send ( "{ENTER}" )
@@ -18105,6 +18107,8 @@ Func OPENURLALLMAIN ( )
 				Sleep ( 150 )
 				Send ( "^t" )
 				Sleep ( 300 )
+				Send ( "^l" )
+				Sleep ( 200 )
 				Send ( "^v" )
 				Sleep ( 150 )
 				Send ( "{ENTER}" )
