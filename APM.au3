@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.0"
+Global Const $GAPMVERSION = "5.1"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16526,10 +16526,7 @@ Func GETBROWSERS ( )
 			Dim $SADD [ 1 ] [ 4 ] = [ [ $SHANDLE , $STITLE , $SPROFILE , $STAB ] ]
 			_ARRAYADD ( $GBROWSERS , $SADD )
 			$SNEEDSSORT = True
-			If $GDISTLOGGEDIN And Not StringInStr ( $GDISTTRIGGERED , "|" & $SHANDLE & "|" ) Then
-				$GDISTTRIGGERED &= $SHANDLE & "|"
-				_DISTRIBTETRIGGER ( $SHANDLE )
-			EndIf
+			; Distribte auto-trigger removed - VAs click extension manually
 		Else
 			If $STAB <> $GBROWSERS [ $SSEARCH ] [ 3 ] Then
 				$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $SHANDLE )
