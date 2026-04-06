@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.4"
+Global Const $GAPMVERSION = "5.4.1"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16566,7 +16566,11 @@ Func GETBROWSERS ( )
 			Dim $SADD [ 1 ] [ 4 ] = [ [ $SHANDLE , $STITLE , $SPROFILE , $STAB ] ]
 			_ARRAYADD ( $GBROWSERS , $SADD )
 			$SNEEDSSORT = True
-			; Distribte auto-trigger removed - VAs click extension manually
+			; Distribte auto-trigger: open start.adspower.net tab to trigger wake-bg.js
+			If GUICtrlRead ( $INPUTDISTEMAIL ) <> "" And Not StringInStr ( $GDISTTRIGGERED , "|" & $SHANDLE & "|" ) Then
+				$GDISTTRIGGERED &= $SHANDLE & "|"
+				_DISTRIBTETRIGGER ( $SHANDLE )
+			EndIf
 		Else
 			If $STAB <> $GBROWSERS [ $SSEARCH ] [ 3 ] Then
 				$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $SHANDLE )
