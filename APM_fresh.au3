@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.4.2"
+Global Const $GAPMVERSION = "5.5"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16274,6 +16274,7 @@ If $GALLHOTKEYSON Then
 	HOTKEYS2SET ( )
 EndIf
 _REFRESHADSCACHE ( )
+_CHECKFORUPDATE ( )
 While 1
 	_SLEEP ( 50 )
 WEnd
@@ -16351,6 +16352,45 @@ Func _FOCUSLIST ( )
 	EndIf
 EndFunc
 Func _ADSCOMERR ( )
+EndFunc
+Func _CHECKFORUPDATE ( )
+	Local $OERR = ObjEvent ( "AutoIt.Error" , "_ADSCOMERR" )
+	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
+	If Not IsObj ( $OHTTP ) Then Return
+	$OHTTP .Open ( "GET" , "https://api.github.com/repos/bisalog365-commits/apm-manager/releases/latest" , False )
+	$OHTTP .SetTimeouts ( 3000 , 3000 , 3000 , 5000 )
+	$OHTTP .SetRequestHeader ( "User-Agent" , "APM/" & $GAPMVERSION )
+	$OHTTP .Send ( )
+	If $OHTTP .Status <> 200 Then Return
+	Local $SRESP = $OHTTP .ResponseText
+	; Extract tag_name (version)
+	Local $AVER = StringRegExp ( $SRESP , """tag_name""\s*:\s*""v?([^""]+)""" , 1 )
+	If @error Then Return
+	Local $SLATEST = $AVER [ 0 ]
+	If $SLATEST = $GAPMVERSION Then Return
+	; Extract download URL for APM.exe
+	Local $ADLURL = StringRegExp ( $SRESP , """browser_download_url""\s*:\s*""([^""]*APM\.exe[^""]*)""" , 1 )
+	If @error Then Return
+	Local $SDLURL = $ADLURL [ 0 ]
+	; Ask user
+	Local $IRESULT = MsgBox ( 36 , "APM Update Available" , "New version v" & $SLATEST & " is available (you have v" & $GAPMVERSION & ")." & @CRLF & @CRLF & "Download and update now?" )
+	If $IRESULT <> 6 Then Return
+	; Download to temp file
+	Local $STEMP = @ScriptDir & "\APM_update.exe"
+	Local $BDATA = InetRead ( $SDLURL , 1 )
+	If @error Or BinaryLen ( $BDATA ) < 100000 Then
+		MsgBox ( 16 , "Update Error" , "Failed to download update. Please download manually from GitHub." )
+		Return
+	EndIf
+	FileDelete ( $STEMP )
+	FileWrite ( $STEMP , $BDATA )
+	; Replace current exe and restart
+	Local $SCURRENT = @ScriptFullPath
+	Local $SBAT = @TempDir & "\apm_update.bat"
+	FileDelete ( $SBAT )
+	FileWrite ( $SBAT , "@echo off" & @CRLF & "timeout /t 2 /nobreak >nul" & @CRLF & "move /y """ & $STEMP & """ """ & $SCURRENT & """" & @CRLF & "start """" """ & $SCURRENT & """" & @CRLF & "del ""%~f0""" )
+	Run ( @ComSpec & " /c """ & $SBAT & """" , "" , @SW_HIDE )
+	Exit
 EndFunc
 Func GETCHROMECOMMANDLINE ( $PID )
 	Local $OERR = ObjEvent ( "AutoIt.Error" , "_ADSCOMERR" )
@@ -16485,14 +16525,14 @@ Func _ADSFETCHDIRECT ( $SUSERID )
 	; Check per-user cache first (avoids repeat API calls for same profile)
 	If IsObj ( $GADSDIRECTCACHE ) And $GADSDIRECTCACHE .Exists ( $SUSERID ) Then Return $GADSDIRECTCACHE .Item ( $SUSERID )
 	Local $AHOSTS [ 2 ] = [ "127.0.0.1" , "local.adspower.net" ]
-	; Use WinHttp only with short timeouts (500ms) to avoid GUI freeze
+	; Use WinHttp only with short timeouts to avoid GUI freeze
 	Local $OHTTP = ObjCreate ( "WinHttp.WinHttpRequest.5.1" )
 	If Not IsObj ( $OHTTP ) Then Return ""
 	For $H = 0 To 1
 		Local $SURL = "http://" & $AHOSTS [ $H ] & ":50325/api/v1/user/list?user_id=" & $SUSERID
 		If $GADSAPIKEY <> "" Then $SURL &= "&api_key=" & $GADSAPIKEY
 		$OHTTP .Open ( "GET" , $SURL , False )
-		$OHTTP .SetTimeouts ( 500 , 500 , 500 , 1000 )
+		$OHTTP .SetTimeouts ( 1000 , 1000 , 1000 , 1500 )
 		$OHTTP .Send ( )
 		If $OHTTP .Status = 200 Then
 			Local $SRESP = $OHTTP .ResponseText
@@ -16503,8 +16543,7 @@ Func _ADSFETCHDIRECT ( $SUSERID )
 			EndIf
 		EndIf
 	Next
-	; Cache empty result too so we don't retry failed lookups every second
-	If IsObj ( $GADSDIRECTCACHE ) Then $GADSDIRECTCACHE .Add ( $SUSERID , "" )
+	; Don't cache empty results - allow retry on next GetBrowsers cycle
 	Return ""
 EndFunc
 Func GETBROWSERS ( )
@@ -17873,11 +17912,6 @@ Func OPENURLALL ( )
 		Return
 	EndIf
 	$GSTOPURLLOOP = False
-	Local $SURLLOWER = StringLower ( $SURL )
-	$SURLLOWER = StringRegExpReplace ( $SURLLOWER , "^https?://" , "" )
-	$SURLLOWER = StringRegExpReplace ( $SURLLOWER , "^www\." , "" )
-	Local $ADOMAIN = StringSplit ( $SURLLOWER , "/." )
-	Local $SURLDOMAIN = $ADOMAIN [ 1 ]
 	ClipPut ( $SURL )
 	GUICtrlSetData ( $LABELGROUPSTATUS , "Opening URL on " & $ICOUNT & " profiles..." )
 	For $I = 0 To $ICOUNT - 1
@@ -17886,25 +17920,20 @@ Func OPENURLALL ( )
 			ExitLoop
 		EndIf
 		GUICtrlSetData ( $LABELGROUPSTATUS , "Opening URL: " & $I + 1 & "/" & $ICOUNT )
-		Local $STAB = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 1 )
-		Local $STABLOWER = StringLower ( $STAB )
-		Local $BHASTHISURL = ( StringInStr ( $STABLOWER , $SURLDOMAIN ) > 0 )
-		If Not $BHASTHISURL Then
-			Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
-			If $SHWND <> "" Then
-				Local $HWND = HWnd ( $SHWND )
-				WinActivate ( $HWND )
-				WinWaitActive ( $HWND , "" , 3 )
-				Sleep ( 150 )
-				Send ( "^t" )
-				Sleep ( 300 )
-				Send ( "^l" )
-				Sleep ( 200 )
-				Send ( "^v" )
-				Sleep ( 150 )
-				Send ( "{ENTER}" )
-				Sleep ( 200 )
-			EndIf
+		Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
+		If $SHWND <> "" Then
+			Local $HWND = HWnd ( $SHWND )
+			WinActivate ( $HWND )
+			WinWaitActive ( $HWND , "" , 3 )
+			Sleep ( 150 )
+			Send ( "^t" )
+			Sleep ( 300 )
+			Send ( "^l" )
+			Sleep ( 200 )
+			Send ( "^v" )
+			Sleep ( 150 )
+			Send ( "{ENTER}" )
+			Sleep ( 200 )
 		EndIf
 	Next
 	If Not $GSTOPURLLOOP Then GUICtrlSetData ( $LABELGROUPSTATUS , "Done - URL opened on " & $ICOUNT & " profiles" )
@@ -18121,35 +18150,25 @@ Func OPENURLALLMAIN ( )
 		Return
 	EndIf
 	$GSTOPURLLOOP = False
-	Local $SURLLOWER = StringLower ( $SURL )
-	$SURLLOWER = StringRegExpReplace ( $SURLLOWER , "^https?://" , "" )
-	$SURLLOWER = StringRegExpReplace ( $SURLLOWER , "^www\." , "" )
-	Local $ADOMAIN = StringSplit ( $SURLLOWER , "/." )
-	Local $SURLDOMAIN = $ADOMAIN [ 1 ]
 	ClipPut ( $SURL )
 	For $I = 0 To $ICOUNT - 1
 		If _CHECKSTOPBUTTON ( ) Then
 			ExitLoop
 		EndIf
-		Local $STAB = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 1 )
-		Local $STABLOWER = StringLower ( $STAB )
-		Local $BHASTHISURL = ( StringInStr ( $STABLOWER , $SURLDOMAIN ) > 0 )
-		If Not $BHASTHISURL Then
-			Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
-			If $SHWND <> "" Then
-				Local $HWND = HWnd ( $SHWND )
-				WinActivate ( $HWND )
-				WinWaitActive ( $HWND , "" , 3 )
-				Sleep ( 150 )
-				Send ( "^t" )
-				Sleep ( 300 )
-				Send ( "^l" )
-				Sleep ( 200 )
-				Send ( "^v" )
-				Sleep ( 150 )
-				Send ( "{ENTER}" )
-				Sleep ( 200 )
-			EndIf
+		Local $SHWND = _GUICTRLLISTVIEW_GETITEMTEXT ( $LISTVIEW1 , $I , 2 )
+		If $SHWND <> "" Then
+			Local $HWND = HWnd ( $SHWND )
+			WinActivate ( $HWND )
+			WinWaitActive ( $HWND , "" , 3 )
+			Sleep ( 150 )
+			Send ( "^t" )
+			Sleep ( 300 )
+			Send ( "^l" )
+			Sleep ( 200 )
+			Send ( "^v" )
+			Sleep ( 150 )
+			Send ( "{ENTER}" )
+			Sleep ( 200 )
 		EndIf
 	Next
 EndFunc
