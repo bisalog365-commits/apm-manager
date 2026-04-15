@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.8"
+Global Const $GAPMVERSION = "5.9"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16224,9 +16224,12 @@ Global $GBROWSERMOVEINPROGRESS = False
 Global $GSTOPURLLOOP = False
 Global $GSORTINGINPROGRESS = False
 GUICtrlCreateTabItem ( "" )
-GUICtrlCreateLabel ( "APM v" & $GAPMVERSION , 16 , 620 , 120 , 15 )
+GUICtrlCreateLabel ( "APM v" & $GAPMVERSION , 16 , 620 , 80 , 15 )
 GUICtrlSetFont ( - 1 , 7 , 400 , 0 , "Arial" )
 GUICtrlSetColor ( - 1 , 8947848 )
+GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
+Global $BUTTONDEBUGLOG = GUICtrlCreateButton ( "Debug Log" , 96 , 618 , 55 , 17 )
+GUICtrlSetFont ( - 1 , 7 , 400 , 0 , "Arial" )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
 $INPUTMAINURL = GUICtrlCreateInput ( "https://www.ticketmaster.com" , 16 , 636 , 185 , 20 )
 GUICtrlSetResizing ( - 1 , $GUI_DOCKBOTTOM + $GUI_DOCKWIDTH + $GUI_DOCKHEIGHT )
@@ -16566,6 +16569,50 @@ Func _ADSFETCHDIRECT ( $SUSERID )
 	Next
 	; Don't cache empty results - allow retry on next GetBrowsers cycle
 	Return ""
+EndFunc
+Func _APMWRITEDEBUGLOG ( )
+	Local $SLOGPATH = $GDIRROOT & "debug_log.txt"
+	Local $HFILE = FileOpen ( $SLOGPATH , 2 )
+	If $HFILE = - 1 Then Return
+	FileWriteLine ( $HFILE , "=== APM Debug Log ===" )
+	FileWriteLine ( $HFILE , "Time: " & @YEAR & "-" & @MON & "-" & @MDAY & " " & @HOUR & ":" & @MIN & ":" & @SEC )
+	FileWriteLine ( $HFILE , "Version: " & $GAPMVERSION )
+	FileWriteLine ( $HFILE , "" )
+	Local $ADBGALL = WinList ( "[CLASS:Chrome_WidgetWin_1]" )
+	If Not IsArray ( $ADBGALL ) Then
+		FileWriteLine ( $HFILE , "WinList returned no windows." )
+		FileClose ( $HFILE )
+		Return
+	EndIf
+	FileWriteLine ( $HFILE , "Total Chrome_WidgetWin_1 windows: " & $ADBGALL [ 0 ] [ 0 ] )
+	FileWriteLine ( $HFILE , "" )
+	For $DW = 1 To $ADBGALL [ 0 ] [ 0 ]
+		Local $DBTITLE = $ADBGALL [ $DW ] [ 0 ]
+		Local $DBHANDLE = $ADBGALL [ $DW ] [ 1 ]
+		Local $DBSTATE = WinGetState ( $DBHANDLE )
+		Local $DBPID = WinGetProcess ( $DBHANDLE )
+		Local $DBISSUN = _ISSUNBROWSERPID ( $DBPID )
+		Local $DBCMD = StringLeft ( GETCHROMECOMMANDLINE ( $DBPID ) , 300 )
+		Local $DBUID = _GETADSPOWERUSERID ( $DBHANDLE )
+		FileWriteLine ( $HFILE , "--- Window " & $DW & " ---" )
+		FileWriteLine ( $HFILE , "  Handle: " & $DBHANDLE )
+		FileWriteLine ( $HFILE , "  Title: " & StringLeft ( $DBTITLE , 80 ) )
+		FileWriteLine ( $HFILE , "  PID: " & $DBPID )
+		FileWriteLine ( $HFILE , "  State: " & $DBSTATE )
+		FileWriteLine ( $HFILE , "  Visible: " & BitAND ( $DBSTATE , 2 ) )
+		FileWriteLine ( $HFILE , "  IsSunBrowser: " & $DBISSUN )
+		FileWriteLine ( $HFILE , "  UserID: " & $DBUID )
+		FileWriteLine ( $HFILE , "  CmdLine: " & $DBCMD )
+		FileWriteLine ( $HFILE , "" )
+	Next
+	FileWriteLine ( $HFILE , "=== Current Browser List (" & UBound ( $GBROWSERS ) & " entries) ===" )
+	For $DB = 0 To UBound ( $GBROWSERS ) - 1
+		FileWriteLine ( $HFILE , "  [" & $DB & "] Handle=" & $GBROWSERS [ $DB ] [ 0 ] & " Profile=" & $GBROWSERS [ $DB ] [ 2 ] & " Tab=" & StringLeft ( $GBROWSERS [ $DB ] [ 3 ] , 50 ) )
+	Next
+	FileWriteLine ( $HFILE , "" )
+	FileWriteLine ( $HFILE , "PID cache: " & $GSUNPIDCACHE )
+	FileClose ( $HFILE )
+	MsgBox ( 64 , "APM Debug" , "Debug log saved to:" & @CRLF & $SLOGPATH , 5 )
 EndFunc
 Func GETBROWSERS ( )
 	$SNEEDSSORT = False
@@ -16963,6 +17010,8 @@ Func GUICHECKCONTROLS ( )
 		$GSTOPURLLOOP = True
 	Case $BUTTONTMTLITE
 		TMLITEALL ( )
+	Case $BUTTONDEBUGLOG
+		_APMWRITEDEBUGLOG ( )
 Case Else
 		Local $BMAINGROUPCLICKED = False
 		For $IMG = 0 To 25
