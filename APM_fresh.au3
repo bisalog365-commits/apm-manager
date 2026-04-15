@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.5"
+Global Const $GAPMVERSION = "5.6"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16612,6 +16612,21 @@ Func GETBROWSERS ( )
 				$GBROWSERS [ $SSEARCH ] [ 3 ] = $STAB
 				$SNEEDSSORT = True
 			EndIf
+			; Retry custom number lookup for profiles still showing user_id
+			; user_ids are 8-char lowercase alphanumeric like "k1b0wpi5"
+			Local $SCURPROFILE = $GBROWSERS [ $SSEARCH ] [ 2 ]
+			If $SCURPROFILE <> "" And StringLen ( $SCURPROFILE ) >= 6 And StringLen ( $SCURPROFILE ) <= 12 And StringRegExp ( $SCURPROFILE , "^[a-z0-9]+$" ) Then
+				Local $SUSERIDRETRY = _GETADSPOWERUSERID ( $SHANDLE )
+				If $SUSERIDRETRY <> "" Then
+					Local $SCUSTOMRETRY = _GETADSPOWERCUSTOMNO ( $SUSERIDRETRY )
+					If $SCUSTOMRETRY <> "" And $SCUSTOMRETRY <> $SCURPROFILE Then
+						$GBROWSERS [ $SSEARCH ] [ 2 ] = $SCUSTOMRETRY
+						$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $SHANDLE )
+						_GUICTRLLISTVIEW_SETITEMTEXT ( $LISTVIEW1 , $II , $SCUSTOMRETRY , 0 )
+						$SNEEDSSORT = True
+					EndIf
+				EndIf
+			EndIf
 		EndIf
 	Next
 	For $I = UBound ( $GBROWSERS ) - 1 To 0 Step - 1
@@ -16650,6 +16665,20 @@ Func BROWSERINJECTCONTROLS ( )
 	If $HHWND = $GGUITOOLBAR Or $HHWND = $GGUIMAIN Then Return
 	$SSEARCH = _ARRAYSEARCH ( $GBROWSERS , $HHWND , 0 , 0 , 0 , 0 , 0 , 0 )
 	If $SSEARCH = - 1 Then Return BROWSERTOOLBARHIDE ( )
+	; Auto-select the listview item matching the active browser window
+	If Not $GBROWSERMOVEINPROGRESS And Not $GSORTINGINPROGRESS Then
+		Local $IIINJ = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $HHWND )
+		If $IIINJ >= 0 Then
+			Local $ASELCUR = _GUICTRLLISTVIEW_GETSELECTEDINDICES ( $LISTVIEW1 , True )
+			If Not IsArray ( $ASELCUR ) Or $ASELCUR [ 0 ] <> 1 Or $ASELCUR [ 1 ] <> $IIINJ Then
+				_GUICTRLLISTVIEW_SETITEMSELECTED ( $LISTVIEW1 , - 1 , False )
+				_GUICTRLLISTVIEW_SETITEMSELECTED ( $LISTVIEW1 , $IIINJ , True , True )
+				_GUICTRLLISTVIEW_ENSUREVISIBLE ( $LISTVIEW1 , $IIINJ )
+				$GLASTSELECTEDINDEX = $IIINJ
+				$GCURRENTPOSITION = $IIINJ
+			EndIf
+		EndIf
+	EndIf
 	$APOS = WinGetPos ( $HHWND )
 	If @error Then Return BROWSERTOOLBARHIDE ( )
 	If $APOS [ 0 ] = $GINJWINOLDX And $APOS [ 1 ] = $GINJWINOLDY And $APOS [ 2 ] = $GINJWINOLDW Then Return
