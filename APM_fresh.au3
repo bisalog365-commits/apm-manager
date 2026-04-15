@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.7"
+Global Const $GAPMVERSION = "5.8"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -16406,24 +16406,44 @@ EndFunc
 Func _ISSUNBROWSERPID ( $IPID )
 	If StringInStr ( $GSUNPIDCACHE , "|Y" & $IPID & "|" ) Then Return True
 	If StringInStr ( $GSUNPIDCACHE , "|N" & $IPID & "|" ) Then Return False
+	; Method 1: Check executable path
 	Local $HPROC = DllCall ( "kernel32.dll" , "handle" , "OpenProcess" , "dword" , 1040 , "bool" , False , "dword" , $IPID )
-	If @error Or $HPROC [ 0 ] = 0 Then
-		$GSUNPIDCACHE &= "N" & $IPID & "|"
-		Return False
+	If Not @error And $HPROC [ 0 ] <> 0 Then
+		Local $SPATH = DllStructCreate ( "wchar[1024]" )
+		Local $ISIZE = DllStructCreate ( "dword" )
+		DllStructSetData ( $ISIZE , 1 , 1024 )
+		Local $ARET = DllCall ( "kernel32.dll" , "bool" , "QueryFullProcessImageNameW" , "handle" , $HPROC [ 0 ] , "dword" , 0 , "struct*" , $SPATH , "struct*" , $ISIZE )
+		DllCall ( "kernel32.dll" , "bool" , "CloseHandle" , "handle" , $HPROC [ 0 ] )
+		If Not @error And $ARET [ 0 ] <> 0 Then
+			Local $SEXEPATH = DllStructGetData ( $SPATH , 1 )
+			If StringInStr ( $SEXEPATH , "SunBrowser" ) Or StringInStr ( $SEXEPATH , "adspower" ) Then
+				$GSUNPIDCACHE &= "Y" & $IPID & "|"
+				Return True
+			EndIf
+		EndIf
 	EndIf
-	Local $SPATH = DllStructCreate ( "wchar[1024]" )
-	Local $ISIZE = DllStructCreate ( "dword" )
-	DllStructSetData ( $ISIZE , 1 , 1024 )
-	Local $ARET = DllCall ( "kernel32.dll" , "bool" , "QueryFullProcessImageNameW" , "handle" , $HPROC [ 0 ] , "dword" , 0 , "struct*" , $SPATH , "struct*" , $ISIZE )
-	DllCall ( "kernel32.dll" , "bool" , "CloseHandle" , "handle" , $HPROC [ 0 ] )
-	If @error Or $ARET [ 0 ] = 0 Then
-		$GSUNPIDCACHE &= "N" & $IPID & "|"
-		Return False
+	; Method 2: Check command line for SunBrowser/AdsPower paths or user-data-dir pattern
+	Local $SCMDCHK = GETCHROMECOMMANDLINE ( $IPID )
+	If $SCMDCHK <> "" Then
+		If StringInStr ( $SCMDCHK , "SunBrowser" ) Or StringInStr ( $SCMDCHK , "adspower" ) Or StringInStr ( $SCMDCHK , "sun_browser" ) Then
+			$GSUNPIDCACHE &= "Y" & $IPID & "|"
+			Return True
+		EndIf
+		; Check for AdsPower user-data-dir pattern (cwd_global or adspower_global)
+		If StringRegExp ( $SCMDCHK , "user-data-dir.*(?:cwd_global|adspower_global|cache_group)" ) Then
+			$GSUNPIDCACHE &= "Y" & $IPID & "|"
+			Return True
+		EndIf
 	EndIf
-	Local $SEXEPATH = DllStructGetData ( $SPATH , 1 )
-	If StringInStr ( $SEXEPATH , "SunBrowser" ) Then
-		$GSUNPIDCACHE &= "Y" & $IPID & "|"
-		Return True
+	; Method 3: Check if this PID matches any known SunBrowser PID (parent/child process)
+	If IsObj ( $GPIDPROFILECACHE ) And $GPIDPROFILECACHE .Count > 0 Then
+		; If any existing profile window shares this PID, it's SunBrowser
+		For $IBCHK = 0 To UBound ( $GBROWSERS ) - 1
+			If WinGetProcess ( $GBROWSERS [ $IBCHK ] [ 0 ] ) = $IPID Then
+				$GSUNPIDCACHE &= "Y" & $IPID & "|"
+				Return True
+			EndIf
+		Next
 	EndIf
 	$GSUNPIDCACHE &= "N" & $IPID & "|"
 	Return False
