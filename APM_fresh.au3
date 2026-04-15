@@ -15956,7 +15956,7 @@ Global Const $STM_SETICON = 368
 Global Const $STM_GETICON = 369
 Global Const $STM_SETIMAGE = 370
 Global Const $STM_GETIMAGE = 371
-Global Const $GAPMVERSION = "5.6"
+Global Const $GAPMVERSION = "5.7"
 Global $GDIRROOT = @ScriptDir & "\APManagerData\"
 Global $GCFGINI = $GDIRROOT & "config.ini"
 DirCreate ( $GDIRROOT )
@@ -15964,6 +15964,7 @@ Global $GADSAPIKEY = ""
 Global $GADSCACHE = ""
 Global $GADSCACHETIME = 0
 Global $GADSDIRECTCACHE = ObjCreate ( "Scripting.Dictionary" )
+Global $GPIDPROFILECACHE = ObjCreate ( "Scripting.Dictionary" )
 Global $GSUNPIDCACHE = "|"
 Global $GDISTTRIGGERED = "|"
 Global $GDISTQUEUE = ""
@@ -16573,18 +16574,35 @@ Func GETBROWSERS ( )
 		$SSEARCH = _ARRAYSEARCH ( $GBROWSERS , $SHANDLE , 0 , 0 , 0 , 0 , 0 , 0 )
 		If $SSEARCH = - 1 Then
 			$SPROFILE = ""
-			Local $SUSERID = _GETADSPOWERUSERID ( $SHANDLE )
-			If $SUSERID <> "" Then
-				Local $SCUSTOMNO = _GETADSPOWERCUSTOMNO ( $SUSERID )
-				If $SCUSTOMNO <> "" Then
-					$SPROFILE = $SCUSTOMNO
-				Else
-					$SPROFILE = $SUSERID
+			Local $INEWPID = WinGetProcess ( $SHANDLE )
+			; First check PID cache - handles dragged-out tabs instantly
+			; (both windows share the same PID so the 2nd window gets the same profile name)
+			If IsObj ( $GPIDPROFILECACHE ) And $GPIDPROFILECACHE .Exists ( String ( $INEWPID ) ) Then
+				$SPROFILE = $GPIDPROFILECACHE .Item ( String ( $INEWPID ) )
+			EndIf
+			; Also check if any existing browser shares this PID (fallback for dragged tabs)
+			If $SPROFILE = "" Then
+				For $IPCHK = 0 To UBound ( $GBROWSERS ) - 1
+					If WinGetProcess ( $GBROWSERS [ $IPCHK ] [ 0 ] ) = $INEWPID And $GBROWSERS [ $IPCHK ] [ 2 ] <> "" Then
+						$SPROFILE = $GBROWSERS [ $IPCHK ] [ 2 ]
+						ExitLoop
+					EndIf
+				Next
+			EndIf
+			; Normal API lookup if PID match didn't find anything
+			If $SPROFILE = "" Then
+				Local $SUSERID = _GETADSPOWERUSERID ( $SHANDLE )
+				If $SUSERID <> "" Then
+					Local $SCUSTOMNO = _GETADSPOWERCUSTOMNO ( $SUSERID )
+					If $SCUSTOMNO <> "" Then
+						$SPROFILE = $SCUSTOMNO
+					Else
+						$SPROFILE = $SUSERID
+					EndIf
 				EndIf
 			EndIf
 			If $SPROFILE = "" Then
-				Local $IPID = WinGetProcess ( $SHANDLE )
-				$SCOMMANDLINE = GETCHROMECOMMANDLINE ( $IPID )
+				$SCOMMANDLINE = GETCHROMECOMMANDLINE ( $INEWPID )
 				If $SCOMMANDLINE <> "" Then
 					Local $SPATTERN = "--session_name=""([^""]+)"""
 					Local $ARESULT = StringRegExp ( $SCOMMANDLINE , $SPATTERN , 1 )
@@ -16597,6 +16615,12 @@ Func GETBROWSERS ( )
 							$SPROFILE = StringStripWS ( $ARESULT [ 0 ] , 3 )
 						EndIf
 					EndIf
+				EndIf
+			EndIf
+			; Cache PID → profile for future dragged-tab detection
+			If $SPROFILE <> "" And IsObj ( $GPIDPROFILECACHE ) Then
+				If Not $GPIDPROFILECACHE .Exists ( String ( $INEWPID ) ) Then
+					$GPIDPROFILECACHE .Add ( String ( $INEWPID ) , $SPROFILE )
 				EndIf
 			EndIf
 			$SINDEX = _GUICTRLLISTVIEW_ADDITEM ( $LISTVIEW1 , $SPROFILE , $SBROWSERICON )
@@ -16638,6 +16662,18 @@ Func GETBROWSERS ( )
 			EndIf
 		Next
 		If Not $BFOUND Then
+			; Remove PID cache entry when last window for that PID closes
+			Local $ICLOSEPID = WinGetProcess ( $GBROWSERS [ $I ] [ 0 ] )
+			Local $BPIDSTILLUSED = False
+			For $IPC = 0 To UBound ( $GBROWSERS ) - 1
+				If $IPC <> $I And WinGetProcess ( $GBROWSERS [ $IPC ] [ 0 ] ) = $ICLOSEPID Then
+					$BPIDSTILLUSED = True
+					ExitLoop
+				EndIf
+			Next
+			If Not $BPIDSTILLUSED And IsObj ( $GPIDPROFILECACHE ) And $GPIDPROFILECACHE .Exists ( String ( $ICLOSEPID ) ) Then
+				$GPIDPROFILECACHE .Remove ( String ( $ICLOSEPID ) )
+			EndIf
 			$II = _GUICTRLLISTVIEW_FINDINTEXT ( $LISTVIEW1 , $GBROWSERS [ $I ] [ 0 ] )
 			_GUICTRLLISTVIEW_DELETEITEM ( $LISTVIEW1 , $II )
 			_ARRAYDELETE ( $GBROWSERS , $I )
